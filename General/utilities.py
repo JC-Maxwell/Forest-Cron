@@ -327,20 +327,29 @@ def set_connection_to_forest_db():
 CONSTANTS_BY_PROCESS_NAMES = _Constants.CONSTANTS_BY_PROCESS_NAMES
 
 # Retrieve all taxpayers that must be iterated in a specific process (i.e. syncrhonizing, initializing, updating and so on)
-def get_taxpayers_for_a_specific_process(process_name,limit=None):
+def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=None):
 	try:
 		process_constant = CONSTANTS_BY_PROCESS_NAMES[process_name]
 		forest_db = set_connection_to_forest_db()
 		db_Taxpayer = forest_db['Taxpayer']
 		taxpayers_filter = { 'status' : process_constant }
 		if limit is not None:
-			db_taxpayers = db_Taxpayer.find(taxpayers_filter).limit(limit)
+			db_taxpayers = db_Taxpayer.find(taxpayers_filter).limit(limit).sort('created_at',1)
 		else:
-			db_taxpayers = db_Taxpayer.find(taxpayers_filter)
+			db_taxpayers = db_Taxpayer.find(taxpayers_filter).sort('created_at',1)
 		taxpayers = []
-		for db_taxpayer in db_taxpayers:
-			taxpayer = create_new_taxpayer(db_taxpayer)
-			taxpayers.append(taxpayer)
+		if from_taxpayer is not None:
+			from_here = False
+			for db_taxpayer in db_taxpayers:
+				if db_taxpayer['identifier'] == from_taxpayer:# Functions because they are sorted
+					from_here = True
+				if from_here:
+					taxpayer = create_new_taxpayer(db_taxpayer)
+					taxpayers.append(taxpayer)
+		else:
+			for db_taxpayer in db_taxpayers:
+				taxpayer = create_new_taxpayer(db_taxpayer)
+				taxpayers.append(taxpayer)
 		return taxpayers
 	except Exception as e:
 		# sl1_logger.critical(e.message)
@@ -456,6 +465,21 @@ def get_pending_cfdis_in_forest_for_this_taxpayer_at_period(taxpayer,begin_date,
 #                 | |                                  
 #                 |_|                                  
 
+def update_current_taxpayer(process_name,current_taxpayer,current_taxpayer_index,logger=None):
+	try:
+		process = get_db_process(process_name,logger=logger)
+		process['current_taxpayer'] = current_taxpayer
+		process['current_taxpayer_index'] = current_taxpayer_index
+		process['current_taxpayer_triggered'] = Datetime.now()
+		forest_db = set_connection_to_forest_db()
+		db_Process = forest_db['Process']
+		db_Process.save(process)
+	except Exception as e:
+		if logger is not None:
+			logger.critical(e.message)
+		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception  
+
 def get_db_process(process_name,logger=None,db_Process=None):
 	try:
 		if db_Process is None:
@@ -469,7 +493,8 @@ def get_db_process(process_name,logger=None,db_Process=None):
 			process = new_process(process_name,logger=logger,db_Process=db_Process)
 		return process
 	except Exception as e:
-		# sl1_logger.critical(e.message)
+		if logger is not None:
+			logger.critical(e.message)
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
@@ -513,6 +538,9 @@ def set_process_available(process_name,logger=None,db_Process=None):
 		process = get_db_process(process_name,logger=logger)
 		process['last_completed'] = Datetime.now()
 		process['available'] = True
+		del process['current_taxpayer']
+		del process['current_taxpayer_index']
+		del process['current_taxpayer_triggered']
 		db_Process.save(process)
 	except Exception as e:
 		# sl1_logger.critical(e.message)

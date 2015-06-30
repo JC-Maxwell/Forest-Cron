@@ -90,7 +90,7 @@ def validate(process_name):
 
 # Desctiption: Functions for supportting process multithreading (i.e. each task could be executed in n threads according to its configuration)
 
-def execute_with_multiprocessing(process_file_name=None,default_log={},threads=1,specific_process_logger=None,cron_logger_starting_message='Process Start',process_name='PROCESS',process_instance=None,specific_shared_variables=None):
+def execute_with_multiprocessing(process_file_name=None,default_log={},threads=1,specific_process_logger=None,cron_logger_starting_message='Process Start',process_name='PROCESS',process_instance=None,specific_shared_variables=None,taxpayers=[]):
 	try:
 		cron_logger.info(LOG_INDENT + cron_logger_starting_message)
 		specific_process_logger.info(' ',extra=default_log)
@@ -100,7 +100,6 @@ def execute_with_multiprocessing(process_file_name=None,default_log={},threads=1
 		# specific_process_logger.info(_Constants.LOG_SEPARATOR,extra=default_log)
 		specific_process_logger.info(process_name.upper(),extra=default_log)
 		# Process data:
-		taxpayers = _Utilities.get_taxpayers_for_a_specific_process(process_name,limit=None)
 		total_taxpayers = len(taxpayers)
 		shared_variables = {
 			'current_taxpayer' : Value('i',0),
@@ -152,6 +151,15 @@ def execute(process):
 			process_file_name = SPECIFIC_PROCESS_CONFIG_DATA['process_file_name']
 			threads = SPECIFIC_PROCESS_CONFIG_DATA['threads']
 			specific_shared_variables = SPECIFIC_PROCESS_CONFIG_DATA['specific_shared_variables']
+			# Get process at db:
+			cron_logger.info(LOG_INDENT + 'Getting process ' + process_name + ' at db')
+			process = _Utilities.get_db_process(process_name)
+			from_taxpayer = None
+			if 'current_taxpayer' in process:
+				from_taxpayer = process['current_taxpayer']# If process fails or if it is stopped it will start from this taxpayer
+				cron_logger.info(LOG_INDENT + 'This process will run from taxpayer ' + from_taxpayer)
+			else:
+				cron_logger.info(LOG_INDENT + 'This process will run for all taxpayers')
 			# Set unavailable:
 			cron_logger.info(LOG_INDENT + 'Setting process ' + process_name + ' unavailable')
 			_Utilities.set_process_unavailable(process_name,logger=cron_logger)
@@ -159,10 +167,16 @@ def execute(process):
 			default_log = _Utilities.add_defalut_data_to_default_log(default_log)
 			# Logging:
 			cron_logger.info(LOG_INDENT + 'Logging calling at cron procesess ... ')
-			_Utilities.log_at_cron_processes(process)			
+			_Utilities.log_at_cron_processes(process)		
+			cron_logger.info(LOG_INDENT + 'Getting taxpayers for this process ... ')
+			taxpayers = _Utilities.get_taxpayers_for_a_specific_process(process_name,limit=50,from_taxpayer=from_taxpayer)
 			# Multi-threading execution:
-			cron_logger.info(LOG_INDENT + 'Executing ' + str(threads) + ' threads for ' + process_name + ' with params ' + str(process_params))
-			execute_with_multiprocessing(process_file_name=process_file_name,specific_process_logger=specific_process_logger,default_log=default_log,cron_logger_starting_message=cron_logger_starting_message,process_name=process_name,process_instance=process_instance,threads=threads,specific_shared_variables=specific_shared_variables)
+			cron_logger.info(LOG_INDENT + 'Executing ... ')
+			cron_logger.info(2*LOG_INDENT + 'Process name: ' + process_name)
+			cron_logger.info(2*LOG_INDENT + 'Threads:      ' + str(threads))
+			cron_logger.info(2*LOG_INDENT + 'Taxpayers:    ' + str(len(taxpayers)))
+			cron_logger.info(2*LOG_INDENT + 'Params:       ' + str(process_params))
+			execute_with_multiprocessing(process_file_name=process_file_name,specific_process_logger=specific_process_logger,default_log=default_log,cron_logger_starting_message=cron_logger_starting_message,process_name=process_name,process_instance=process_instance,threads=threads,specific_shared_variables=specific_shared_variables,taxpayers=taxpayers)
 			_Utilities.set_process_available(process_name,logger=cron_logger)
 		# else:
 		# 	cron_logger.info(LOG_INDENT + 'End of execution')

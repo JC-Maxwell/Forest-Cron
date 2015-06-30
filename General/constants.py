@@ -61,5 +61,9 @@ CONSTANTS_BY_PROCESS_NAMES = {
 	'inicident_handler' : None
 }# End of CONSTANTS_BY_PROCESS_NAMES
 
+# Processes:
+SL1 = 'synchronization_layer_1'
+EQUALIZATION = 'equalization'
+
 
 
