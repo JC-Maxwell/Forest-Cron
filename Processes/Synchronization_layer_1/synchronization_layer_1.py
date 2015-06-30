@@ -75,7 +75,7 @@ def excute_synchronization_layer_1(taxpayers,shared_variables):# Taxpayers are t
 			percentage_of_synchronization_done = _Utilities.get_process_percentage_done(taxpayers_synchronized_counter,total_taxpayers_for_this_subprocess)
 			taxpayers_synchronized_counter = taxpayers_synchronized_counter + 1# Specific taxpayers (this thread's counter)
 			process_logger.info(LOG_INDENT + '-> (' + str(taxpayers_synchronized_counter) + '/' + str(total_taxpayers_for_this_subprocess)  + ') ' + taxpayer['identifier'] + ' --- ' + percentage_of_synchronization_done)
-			# sl1_execution_data = excute_synchronization_layer_1_for_taxpayer(taxpayer=taxpayer,sl1_data=sl1_data,process_logger=process_logger)
+			sl1_execution_data = excute_synchronization_layer_1_for_taxpayer(taxpayer=taxpayer,sl1_data=sl1_data,process_logger=process_logger)
 			with lock:
 				current_taxpayer.value = current_taxpayer.value + 1
 			current_date = Datetime.now()
@@ -86,18 +86,18 @@ def excute_synchronization_layer_1(taxpayers,shared_variables):# Taxpayers are t
 				'current_taxpayer_index' : current_taxpayer.value,
 				'total_taxpayers' : total_taxpayers.value,
 				'identifier' : taxpayer['identifier'],
-				# 'new' : sl1_execution_data['firmware']['new'],
-				# 'to_update' : sl1_execution_data['forest_db']['before']['pending'],
-				# 'stored' : sl1_execution_data['forest_db']['after']['new'],
-				# 'updated' : sl1_execution_data['forest_db']['after']['updated'],
-				# 'completed' : sl1_execution_data['forest_db']['after']['pending_completed'],
-				# 'pending' : sl1_execution_data['forest_db']['after']['pending'],
-				'new' : 0,
-				'to_update' : 0,
-				'stored' : 0,
-				'updated' : 0,
-				'completed' : 0,
-				'pending' : 0,
+				'new' : sl1_execution_data['firmware']['new'],
+				'to_update' : sl1_execution_data['forest_db']['before']['pending'],
+				'stored' : sl1_execution_data['forest_db']['after']['new'],
+				'updated' : sl1_execution_data['forest_db']['after']['updated'],
+				'completed' : sl1_execution_data['forest_db']['after']['pending_completed'],
+				'pending' : sl1_execution_data['forest_db']['after']['pending'],
+				# 'new' : 0,
+				# 'to_update' : 0,
+				# 'stored' : 0,
+				# 'updated' : 0,
+				# 'completed' : 0,
+				# 'pending' : 0,
 				'lock' : lock,
 				'current_table_row' : current_table_row
 			}# End of sl1_execution_log

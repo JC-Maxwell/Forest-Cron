@@ -169,7 +169,7 @@ def execute(process):
 			cron_logger.info(LOG_INDENT + 'Logging calling at cron procesess ... ')
 			_Utilities.log_at_cron_processes(process)		
 			cron_logger.info(LOG_INDENT + 'Getting taxpayers for this process ... ')
-			taxpayers = _Utilities.get_taxpayers_for_a_specific_process(process_name,limit=50,from_taxpayer=from_taxpayer)
+			taxpayers = _Utilities.get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=from_taxpayer)
 			# Multi-threading execution:
 			cron_logger.info(LOG_INDENT + 'Executing ... ')
 			cron_logger.info(2*LOG_INDENT + 'Process name: ' + process_name)
