@@ -349,7 +349,7 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 		process_constant = CONSTANTS_BY_PROCESS_NAMES[process_name]
 		forest_db = set_connection_to_forest_db()
 		db_Taxpayer = forest_db['Taxpayer']
-		taxpayers_filter = { 'status' : process_constant, 'identifier' : 'PABA620918635' }
+		taxpayers_filter = { 'status' : process_constant }
 		if limit is not None and from_taxpayer is None:
 			db_taxpayers = db_Taxpayer.find(taxpayers_filter).limit(limit).sort('created_at',1)
 		else:
