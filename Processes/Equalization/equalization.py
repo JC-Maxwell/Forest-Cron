@@ -67,7 +67,7 @@ def equalize_dbs(taxpayers,shared_variables):# Taxpayers are the ones splitted f
 		taxpayers_equalized_counter = 0
 		process_logger.info(LOG_INDENT + 'Taxpayers: ' + str(total_taxpayers_for_this_subprocess))
 		for taxpayer in taxpayers:
-			_Utilities.update_current_taxpayer(_Constants.EQUALIZATION,taxpayer['identifier'],current_taxpayer.value,logger=process_logger)
+			_Utilities.update_current_taxpayer(_Constants.EQUALIZATION,taxpayer['identifier'],current_taxpayer.value+1,logger=process_logger)
 			percentage_of_equalization_done = _Utilities.get_process_percentage_done(taxpayers_equalized_counter,total_taxpayers_for_this_subprocess)
 			taxpayers_equalized_counter = taxpayers_equalized_counter + 1# Specific taxpayers (this thread's counter)
 			process_logger.info(LOG_INDENT + '-> (' + str(taxpayers_equalized_counter) + '/' + str(total_taxpayers_for_this_subprocess)  + ') ' + taxpayer['identifier'] + ' --- ' + percentage_of_equalization_done)

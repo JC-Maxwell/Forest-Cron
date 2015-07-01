@@ -19,6 +19,10 @@ import logging
 # Paths:
 THREADS_DIR = '/Threads'
 
+# Time Out:
+DEFAULT_FIRMWARE_TIMEOUT = 1800# One hour
+UPDATING_FIRMWARE_TIMEOUT_RATE = 1.2
+
 # Logging
 LOGGING_LEVELS = {
 	'critical' : logging.CRITICAL,
@@ -46,8 +50,10 @@ LOG_INDENT = '    '
 # Firmware
 forest_1 = 'http://25.186.251.198/firmware'
 forest_2 = 'http://25.86.20.35/firmware'
+
 FIRMWARE_URL = forest_1
 FIRMWARE_URL_INIT = forest_2
+FOREST_AZURE = 'http://forest-sat.cloudapp.net'
 
 # CFDIs status:
 CANCELED_STATUS = 'canceled'

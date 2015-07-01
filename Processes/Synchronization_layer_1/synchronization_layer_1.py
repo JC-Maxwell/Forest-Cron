@@ -71,7 +71,7 @@ def excute_synchronization_layer_1(taxpayers,shared_variables):# Taxpayers are t
 		taxpayers_synchronized_counter = 0
 		process_logger.info(LOG_INDENT + 'Taxpayers: ' + str(total_taxpayers_for_this_subprocess))
 		for taxpayer in taxpayers:
-			_Utilities.update_current_taxpayer(_Constants.SL1,taxpayer['identifier'],current_taxpayer.value,logger=process_logger)
+			_Utilities.update_current_taxpayer(_Constants.SL1,taxpayer['identifier'],current_taxpayer.value+1,logger=process_logger)
 			percentage_of_synchronization_done = _Utilities.get_process_percentage_done(taxpayers_synchronized_counter,total_taxpayers_for_this_subprocess)
 			taxpayers_synchronized_counter = taxpayers_synchronized_counter + 1# Specific taxpayers (this thread's counter)
 			process_logger.info(LOG_INDENT + '-> (' + str(taxpayers_synchronized_counter) + '/' + str(total_taxpayers_for_this_subprocess)  + ') ' + taxpayer['identifier'] + ' --- ' + percentage_of_synchronization_done)
@@ -140,8 +140,9 @@ def excute_synchronization_layer_1_for_taxpayer(taxpayer=None,sl1_data=None,proc
 			'months' : sl1_data['months'],
 			'uuids' : existing_cfdi_uuids
 		}# End of get_sat_update_params
-		process_logger.info(2*LOG_INDENT + 'RETRIEVING DATA FROM FIRMWARE (SAT) ... ')
-		sat_updates = _Firmware.isa(instruction='get_sat_updates',params=get_sat_updates_params,sl1_execution_log=sl1_execution_log)
+		firmware_timeout = taxpayer['firmware_timeout'] if 'firmware_timeout' in taxpayer else _Constants.DEFAULT_FIRMWARE_TIMEOUT
+		process_logger.info(2*LOG_INDENT + 'RETRIEVING DATA FROM FIRMWARE (SAT) timeout = ' + str(firmware_timeout) + ' secs')
+		sat_updates = _Firmware.isa(instruction='get_sat_updates',params=get_sat_updates_params,sl1_execution_log=sl1_execution_log,logger=process_logger,timeout=firmware_timeout,taxpayer=taxpayer)
 		new_cfdis = sat_updates['new']
 		updated_cfdis = sat_updates['updated']
 		process_logger.info(3*LOG_INDENT + 'CFDI new:           ' + str(sl1_execution_log['firmware']['new']))

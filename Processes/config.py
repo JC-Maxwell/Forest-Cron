@@ -43,7 +43,7 @@ process_handler = {
 		'process_file_name' : SL1_LOGGING_CONFIG['process_file_name'],
 		'specific_process_logger' : _Utilities.get_logger(SL1_LOGGING_CONFIG['process_file_name']),# Logger for this process (Note: each subprocess of this process will have its own logs but this is the main logger of this process)
 		'cron_logger_starting_message' : 'SL1 start',# Message to confirm the main logger (cron-logger) that process has started
-		'threads' : 3,
+		'threads' : 1,
 		'specific_shared_variables' : {
 			'current_table_row' : Value('i',SL1_LOGGING_CONFIG['table_row_limit'])
 		},

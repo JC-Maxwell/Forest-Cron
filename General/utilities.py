@@ -20,6 +20,7 @@ import math
 import multiprocessing
 from datetime import datetime as Datetime
 from datetime import date as Date
+import signal
 
 # Pauli SDK dependency:
 from pauli_sdk.Modules import constants as _Pauli_Constants
@@ -326,14 +327,30 @@ def set_connection_to_forest_db():
 
 CONSTANTS_BY_PROCESS_NAMES = _Constants.CONSTANTS_BY_PROCESS_NAMES
 
+def update_taxpayer_firmware_timeout(taxpayer,logger=None):
+	try:
+		forest_db = set_connection_to_forest_db()
+		db_Taxpayer = forest_db['Taxpayer']
+		current_timeout = taxpayer['firmware_timeout']
+		new_timeout = int(current_timeout*_Constants.UPDATING_FIRMWARE_TIMEOUT_RATE)
+		if logger is not None:
+			logger.info(3*LOG_INDENT + 'Updating timeout from ' + str(current_timeout) + 'secs to ' + str(new_timeout) + ' secs')
+		taxpayer['firmware_timeout'] = new_timeout
+		db_Taxpayer.save(taxpayer)
+	except Exception as e:
+		if logger is not None:
+			logger.critical(e.message)
+		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception
+
 # Retrieve all taxpayers that must be iterated in a specific process (i.e. syncrhonizing, initializing, updating and so on)
 def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=None):
 	try:
 		process_constant = CONSTANTS_BY_PROCESS_NAMES[process_name]
 		forest_db = set_connection_to_forest_db()
 		db_Taxpayer = forest_db['Taxpayer']
-		taxpayers_filter = { 'status' : process_constant }
-		if limit is not None:
+		taxpayers_filter = { 'status' : process_constant, 'identifier' : 'PABA620918635' }
+		if limit is not None and from_taxpayer is None:
 			db_taxpayers = db_Taxpayer.find(taxpayers_filter).limit(limit).sort('created_at',1)
 		else:
 			db_taxpayers = db_Taxpayer.find(taxpayers_filter).sort('created_at',1)
@@ -346,6 +363,9 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 				if from_here:
 					taxpayer = create_new_taxpayer(db_taxpayer)
 					taxpayers.append(taxpayer)
+					if limit is not None:
+						if len(taxpayers) > limit:
+							break
 		else:
 			for db_taxpayer in db_taxpayers:
 				taxpayer = create_new_taxpayer(db_taxpayer)
@@ -359,12 +379,15 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 # Create a new taxpayer dict:
 def create_new_taxpayer(db_taxpayer):
 	try:
-		new_taxpayer = {
-			'identifier' : db_taxpayer['identifier'],
-			'password' : db_taxpayer['password'],
-			'start_date' : db_taxpayer['start_date']
-		}#End of new_taxpayer
-		return new_taxpayer
+		# new_taxpayer = {
+		# 	'identifier' : db_taxpayer['identifier'],
+		# 	'password' : db_taxpayer['password'],
+		# 	'start_date' : db_taxpayer['start_date'],
+		# 	'status' : db_taxpayer['start_date'],
+		# 	'created_at' : db_taxpayer['start_date'],
+		# 	'firmware_timeout' : db_taxpayer['firmware_timeout']
+		# }#End of new_taxpayer
+		return db_taxpayer
 	except Exception as e:
 		# sl1_logger.critical(e.message)
 		already_handled_exception = Already_Handled_Exception(e.message)
@@ -670,7 +693,18 @@ def sat_date_to_ISODate(sat_date,logger=None):
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
-
+def set_timeout(func, args=(), kwargs={}, timeout_duration=5, default=None):
+	class TimeoutError(Exception):
+		pass
+	def handler(signum, frame):
+		raise TimeoutError('TimeOut Exception')
+	signal.signal(signal.SIGALRM, handler) 
+	signal.alarm(timeout_duration)
+	try:
+		result = func(*args,**kwargs)
+	except TimeoutError as exc:
+		result = default
+	return result
 
 
 
