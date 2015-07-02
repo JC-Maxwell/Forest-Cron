@@ -150,21 +150,27 @@ def excute_synchronization_layer_1_for_taxpayer(taxpayer=None,sl1_data=None,proc
 		process_logger.info(3*LOG_INDENT + 'CFDI new:           ' + str(sl1_execution_log['firmware']['new']))
 		process_logger.info(3*LOG_INDENT + 'CFDI to-update:     ' + str(sl1_execution_log['firmware']['update']))
 		# Update Forest DB -> NEW OR COMPLETED:
-		process_logger.info(2*LOG_INDENT + 'UPDATING FOREST DB ... ')
+		process_logger.info(2*LOG_INDENT + 'UPDATING FOREST DB (creting new CFDIs) ... ')
+		n = 0
 		for new_cfdi in new_cfdis:
+			n = n + 1
 			uuid = new_cfdi['uuid']
 			if uuid in pending_cfdi_uuids:# Complete pending cfdis:
 				if 'xml' in new_cfdi and new_cfdi['xml'] != '':
 					cfdi_with_missing_xml = new_cfdi
 					_Locals.set_xml_to_pending_cfdi(cfdi_with_missing_xml,logger=process_logger,sl1_execution_log=sl1_execution_log)
+					process_logger.info(3*LOG_INDENT + str(n) + '. ' + uuid + ' completed in Forest DB')
 			else:# Completely new ones:
 				_Locals.create_cfdi(new_cfdi,logger=process_logger,sl1_execution_log=sl1_execution_log)
+				process_logger.info(3*LOG_INDENT + str(n) + '. ' + uuid + ' stored in Forest DB')
 		# Update Forest DB -> JUST UPDATING:
+		process_logger.info(2*LOG_INDENT + 'UPDATING FOREST DB (updating existing CFDIs) ... ')
 		cfdis_in_db = _Utilities.get_cfdis_in_forest_for_this_taxpayer_at_period(taxpayer,sl1_data['begin_date'],sl1_data['end_date'])# Get cfdis for updating data (They must be retrieved again due to cursor timeout problems):
 		updated_cfdi_uuids = []
 		updated_cfdis_status_by_uuid = {}
 		cfdis_with_status_updated = 0;
 		default_canceled_xml_inserted_in_updating = 0;
+		n = 0
 		for updated_cfdi in updated_cfdis:
 			for cfdi_in_db in cfdis_in_db:
 				cfdi_in_db_uuid = cfdi_in_db['uuid']
@@ -174,6 +180,9 @@ def excute_synchronization_layer_1_for_taxpayer(taxpayer=None,sl1_data=None,proc
 					# Compare the one in forest db and the one in SAT to equalize CFDI state:
 					if updated_cfdi_status == _Constants.CANCELED_STATUS:
 						_Locals.set_cancelled_status_to_cfdi(cfdi_in_db,updated_cfdi,logger=process_logger,sl1_execution_log=sl1_execution_log)
+						n = n + 1
+						process_logger.info(3*LOG_INDENT + str(n) + '. ' + cfdi_in_db_uuid + ' updated in Forest DB')
+		process_logger.info(2*LOG_INDENT + 'SUMMARY ... ')
 		process_logger.info(3*LOG_INDENT + 'New stored:         ' + str(sl1_execution_log['forest_db']['after']['new']))
 		process_logger.info(3*LOG_INDENT + 'Pending completed:  ' + str(sl1_execution_log['forest_db']['after']['pending_completed']))
 		process_logger.info(3*LOG_INDENT + 'Pending:            ' + str(sl1_execution_log['forest_db']['after']['pending']))

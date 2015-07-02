@@ -349,7 +349,10 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 		process_constant = CONSTANTS_BY_PROCESS_NAMES[process_name]
 		forest_db = set_connection_to_forest_db()
 		db_Taxpayer = forest_db['Taxpayer']
-		taxpayers_filter = { 'status' : process_constant }
+		if process_constant == _Constants.SYNCHRONIZATION:
+			taxpayers_filter = {}
+		else:
+			taxpayers_filter = { 'status' : process_constant }
 		if limit is not None and from_taxpayer is None:
 			db_taxpayers = db_Taxpayer.find(taxpayers_filter).limit(limit).sort('created_at',1)
 		else:
@@ -570,6 +573,7 @@ def update_current_taxpayer(process_name,current_taxpayer,current_taxpayer_index
 		process['current_taxpayer'] = current_taxpayer
 		process['current_taxpayer_index'] = current_taxpayer_index
 		process['current_taxpayer_triggered'] = Datetime.now()
+		process['percentage_done'] = get_percentage_done(process['current_taxpayer_index'],process['total_taxpayers'])
 		forest_db = set_connection_to_forest_db()
 		db_Process = forest_db['Process']
 		db_Process.save(process)
@@ -615,7 +619,7 @@ def new_process(process_name,logger=None,db_Process=None):
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
-def set_process_unavailable(process_name,logger=None,db_Process=None):
+def set_process_unavailable(process_name,taxpayers=[],logger=None,db_Process=None):
 	try:
 		if db_Process is None:
 			forest_db = set_connection_to_forest_db()
@@ -623,6 +627,8 @@ def set_process_unavailable(process_name,logger=None,db_Process=None):
 		process = get_db_process(process_name,logger=logger)
 		process['last_triggered'] = Datetime.now()
 		process['available'] = False
+		process['total_taxpayers'] = len(taxpayers)
+		process['percentage_done'] = '0.00%'
 		db_Process.save(process)
 		return process['available']
 	except Exception as e:
@@ -630,17 +636,25 @@ def set_process_unavailable(process_name,logger=None,db_Process=None):
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
-def set_process_available(process_name,logger=None,db_Process=None):
+def set_process_available(process_name,process_duration=0,logger=None,db_Process=None):
 	try:
 		if db_Process is None:
 			forest_db = set_connection_to_forest_db()
 			db_Process = forest_db['Process']
 		process = get_db_process(process_name,logger=logger)
 		process['last_completed'] = Datetime.now()
+		executions_counter = process['executions_counter'] if 'executions_counter' in process else 0
+		average_duration = process['average_duration'] if 'average_duration' in process else 0
+		total_of_durations = average_duration*executions_counter
+		new_total_of_durations = total_of_durations + process_duration
+		process['executions_counter'] = executions_counter + 1
+		process['average_duration'] = new_total_of_durations/process['executions_counter']
 		process['available'] = True
 		del process['current_taxpayer']
 		del process['current_taxpayer_index']
 		del process['current_taxpayer_triggered']
+		del process['total_taxpayers']
+		del process['percentage_done']
 		db_Process.save(process)
 	except Exception as e:
 		# sl1_logger.critical(e.message)

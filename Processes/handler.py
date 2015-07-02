@@ -10,6 +10,7 @@
 # ======================================================== DEPENDENCIES
 
 # Native:
+from __future__ import division
 import os 
 import sys
 import json
@@ -135,6 +136,7 @@ def execute_with_multiprocessing(process_file_name=None,default_log={},threads=1
 
 def execute(process):
 	try:
+		start_time = time.time()
 		process_name = process['name']
 		process_params = process['params']
 		cron_logger.info(LOG_INDENT + 'Validating process ... ')
@@ -160,10 +162,6 @@ def execute(process):
 				cron_logger.info(LOG_INDENT + 'This process will run from taxpayer ' + from_taxpayer)
 			else:
 				cron_logger.info(LOG_INDENT + 'This process will run for all taxpayers')
-			# Set unavailable:
-			cron_logger.info(LOG_INDENT + 'Setting process ' + process_name + ' unavailable')
-			process_availability = _Utilities.set_process_unavailable(process_name,logger=cron_logger)
-			cron_logger.info(LOG_INDENT + process_name + ' availability: ' + str(process_availability))
 			# Update default log
 			default_log = _Utilities.add_defalut_data_to_default_log(default_log)
 			# Logging:
@@ -171,6 +169,10 @@ def execute(process):
 			_Utilities.log_at_cron_processes(process)		
 			cron_logger.info(LOG_INDENT + 'Getting taxpayers for this process ... ')
 			taxpayers = _Utilities.get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=from_taxpayer)
+			# Set unavailable:
+			cron_logger.info(LOG_INDENT + 'Setting process ' + process_name + ' unavailable')
+			process_availability = _Utilities.set_process_unavailable(process_name,taxpayers=taxpayers,logger=cron_logger)
+			cron_logger.info(LOG_INDENT + process_name + ' availability: ' + str(process_availability))
 			# Multi-threading execution:
 			cron_logger.info(LOG_INDENT + 'Executing ... ')
 			cron_logger.info(2*LOG_INDENT + 'Process name: ' + process_name)
@@ -178,7 +180,9 @@ def execute(process):
 			cron_logger.info(2*LOG_INDENT + 'Taxpayers:    ' + str(len(taxpayers)))
 			cron_logger.info(2*LOG_INDENT + 'Params:       ' + str(process_params))
 			execute_with_multiprocessing(process_file_name=process_file_name,specific_process_logger=specific_process_logger,default_log=default_log,cron_logger_starting_message=cron_logger_starting_message,process_name=process_name,process_instance=process_instance,threads=threads,specific_shared_variables=specific_shared_variables,taxpayers=taxpayers)
-			_Utilities.set_process_available(process_name,logger=cron_logger)
+			end_time = time.time()
+			process_duration = (end_time - start_time)/3600# in hours
+			_Utilities.set_process_available(process_name,process_duration=process_duration,logger=cron_logger)
 		else:
 			cron_logger.info(LOG_INDENT + 'End of execution')
 	except Already_Handled_Exception as already_handled_exception:
