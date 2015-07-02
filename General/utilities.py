@@ -349,7 +349,7 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 		process_constant = CONSTANTS_BY_PROCESS_NAMES[process_name]
 		forest_db = set_connection_to_forest_db()
 		db_Taxpayer = forest_db['Taxpayer']
-		if process_constant == _Constants.SYNCHRONIZATION:
+		if process_name == _Constants.EQUALIZATION:
 			taxpayers_filter = {}
 		else:
 			taxpayers_filter = { 'status' : process_constant }
