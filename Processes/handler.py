@@ -160,7 +160,7 @@ def execute(process):
 				cron_logger.info(LOG_INDENT + 'This process will run from taxpayer ' + from_taxpayer)
 			else:
 				cron_logger.info(LOG_INDENT + 'This process will run for all taxpayers')
-			 Set unavailable:
+			# Set unavailable:
 			cron_logger.info(LOG_INDENT + 'Setting process ' + process_name + ' unavailable')
 			_Utilities.set_process_unavailable(process_name,logger=cron_logger)
 			# Update default log
