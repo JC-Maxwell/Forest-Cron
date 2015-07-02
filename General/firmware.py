@@ -39,7 +39,6 @@ CALLING_FIRMWARE = '         Sending request to Forest-Firmware'
 
 def callback(**params):
 	try:
-		# return { 'new' : [], 'updated' : [] }
 		logger = None
 		if 'logger' in params:
 			logger = params['logger']
@@ -47,15 +46,15 @@ def callback(**params):
 		taxpayer = params['taxpayer']
 		del params['taxpayer']
 		url = FIRMWARE_URL
-		sl1_execution_log = params['sl1_execution_log']
-		del params['sl1_execution_log']
+		log = params['log']
+		del params['log']
 		payload = params
 		headers = {'content-type':'application/json'}
 		firmware_result = requests.post(url, data=json.dumps(payload), headers=headers)
 		if firmware_result.status_code == 200:
 			firmware_result_json = firmware_result.json()
-			sl1_execution_log['firmware']['new'] = len(firmware_result_json['new'])
-			sl1_execution_log['firmware']['update'] = len(firmware_result_json['updated'])
+			log['firmware']['new'] = len(firmware_result_json['new'])
+			log['firmware']['update'] = len(firmware_result_json['updated'])
 			return firmware_result_json
 		else:
 			if logger is not None:

@@ -58,4 +58,4 @@ equalization = {
 			'errors' : 'Errors'
 		}
 	}# End of logging
-}# End of general
+}# End of equalization

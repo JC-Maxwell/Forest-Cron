@@ -103,6 +103,8 @@ def equalize_dbs(taxpayers,shared_variables):# Taxpayers are the ones splitted f
 			else:
 				equalization_log['end'] = False
 			_Locals.log_eq_thread_logs_at_equalization_main_logs(equalization_execution_log=equalization_log,equalization_logger=equalization_logger,cron_logger=cron_logger)
+			process_logger.info(2*LOG_INDENT + 'Updating taxpayer ... ')
+			_Utilities.update_taxpayer_status(taxpayer,_Constants.EQUALIZATION,logger=process_logger)
 			process_logger.info(2*LOG_INDENT + 'Equalized successfully. Logged at Equalization main logs')
 		process_logger.info(EQUALIZATION_PROCESS_NAME + ' - ' + process_name.upper() + ' DONE SUCCESSFULLY \0/')
 		process_logger.info(_Constants.LOG_SEPARATOR)

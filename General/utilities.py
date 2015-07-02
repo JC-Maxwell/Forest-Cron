@@ -331,7 +331,7 @@ def update_taxpayer_firmware_timeout(taxpayer,logger=None):
 	try:
 		forest_db = set_connection_to_forest_db()
 		db_Taxpayer = forest_db['Taxpayer']
-		current_timeout = taxpayer['firmware_timeout']
+		current_timeout = taxpayer['firmware_timeout'] if 'firmware_timeout' in taxpayer else _Constants.DEFAULT_FIRMWARE_TIMEOUT
 		new_timeout = int(current_timeout*_Constants.UPDATING_FIRMWARE_TIMEOUT_RATE)
 		if logger is not None:
 			logger.info(3*LOG_INDENT + 'Updating timeout from ' + str(current_timeout) + 'secs to ' + str(new_timeout) + ' secs')
@@ -393,6 +393,22 @@ def create_new_taxpayer(db_taxpayer):
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
+STATUS_DATES = _Constants.STATUS_DATES
+
+# Update taxpayer status:
+def update_taxpayer_status(taxpayer,process_constant,logger=None):
+	try:
+		forest_db = set_connection_to_forest_db()
+		db_Taxpayer = forest_db['Taxpayer']
+		date_field = STATUS_DATES[process_constant]
+		taxpayer[date_field] = Datetime.now()
+		db_Taxpayer.save(taxpayer)
+	except Exception as e:
+		if logger is not None:
+			logger.critical(e.message)
+		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception
+
 # ______           _____ ____________ _____      
 # |  ___|         /  __ \|  ___|  _  \_   _|   _ 
 # | |_ ___  _ __  | /  \/| |_  | | | | | | ___(_)
@@ -400,6 +416,66 @@ def create_new_taxpayer(db_taxpayer):
 # | || (_) | |    | \__/\| |   | |/ / _| |\__ \_ 
 # \_| \___/|_|     \____/\_|   |___/  \___/___(_)
  
+# Create a new CFDI in Forest DB:
+def create_cfdi(new_cfdi,logger=None,log=None):
+	try:
+		forest_db = set_connection_to_forest_db()
+		db_CFDI = forest_db['CFDI']
+		uuid = new_cfdi['uuid'].upper()
+		# Build new db cfdi:
+		db_new_cfdi = {
+			'uuid': uuid,
+			'buyer': new_cfdi['buyer'],
+			'seller': new_cfdi['seller'],
+			'status': new_cfdi['status'],
+			'certification_date': sat_date_to_ISODate(new_cfdi['certification_date']),
+			'issued_date': sat_date_to_ISODate(new_cfdi['issued_date']),
+			'voucher_effect' : new_cfdi['voucher_effect'] if 'voucher_effect' in new_cfdi else None
+		}#End of db_ne_cfdi
+		# Get xml data:
+		xml = new_cfdi['xml']
+		if xml is not None:
+			validation = _Pauli_Helper.validate_xml(xml)
+			xml_warnings = validation['warnings']
+			xml_invalidations = validation['invalidations']
+			db_new_cfdi['xml'] = xml
+			db_new_cfdi['validated'] = True  if validation['validated'] else False
+			db_new_cfdi['details'] = {
+				'invalidations' : xml_invalidations,
+				'warnings' : xml_warnings
+			}#End of details
+			log['forest_db']['after']['new'] = log['forest_db']['after']['new'] + 1
+		elif new_cfdi['status'] == _Constants.CANCELED_STATUS:
+			db_new_cfdi['xml'] = _Helper.build_default_xml(db_new_cfdi['seller'],db_new_cfdi['buyer'],db_new_cfdi['certification_date'],db_new_cfdi['issued_date'],db_new_cfdi['voucher_effect'],db_new_cfdi['uuid'])
+			log['forest_db']['after']['new'] = log['forest_db']['after']['new'] + 1
+		else:
+			log['forest_db']['after']['pending'] = log['forest_db']['after']['pending'] + 1
+		db_CFDI.insert(db_new_cfdi)
+	except Exception as e:
+		if logger is not None:
+			logger.critical(e.message)
+		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception
+
+# Get the existing uuids (already exists in Forest DB and they have xml):
+def get_existing_uuids_in_forest_db(cfdis_in_db=None,logger=None):
+	try:
+		existing_cfdi_uuids = []
+		for cfdi_in_db in cfdis_in_db:
+			uuid = cfdi_in_db['uuid']
+			status = cfdi_in_db['status']
+			existing_uuid = {
+				'uuid' : uuid,
+				'status' : status
+			}# End of existing_uuid
+			existing_cfdi_uuids.append(existing_uuid)
+		number_of_existing_cfdi_uuids = len(existing_cfdi_uuids)
+		return existing_cfdi_uuids
+	except Exception as e:
+		logger.critical(e.message)
+		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception
+		
 def log_cfdis_uuids(title=None,indent=None,cfdis=None,logger=None,dict=False):
 	try:
 		logger.info(title)
@@ -661,6 +737,19 @@ def get_month_days(month):
 		return month_days[month]
 	except Exception as e:
 		# sl1_logger.critical(e.message)
+		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception
+
+# Get percentage done of something:
+def get_percentage_done(part_done,total,logger=None):
+	try:
+		if total == 0:
+			total = 1 
+		percentage_done = part_done*100/total
+		return str(round(percentage_done,2)) + '%'
+	except Exception as e:
+		if logger is not None:
+			logger.critical(e.message)
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 

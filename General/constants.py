@@ -20,8 +20,8 @@ import logging
 THREADS_DIR = '/Threads'
 
 # Time Out:
-DEFAULT_FIRMWARE_TIMEOUT = 1800# One hour
-UPDATING_FIRMWARE_TIMEOUT_RATE = 1.2
+DEFAULT_FIRMWARE_TIMEOUT = 3600# One hour
+UPDATING_FIRMWARE_TIMEOUT_RATE = 1.5
 
 # Logging
 LOGGING_LEVELS = {
@@ -35,8 +35,6 @@ LOGGING_LEVELS = {
 
 # Processes (syncrhonization layer 2 and incident handler are for all taxpayers)
 SYNCHRONIZATION = 'keeping_syncrhonizing'
-INITIALIZATION = 'initialization'
-UPDATING = 'updating'
 CRON_PROCESSES = 'cron_processes'
 
 # Periods
@@ -58,6 +56,12 @@ FOREST_AZURE = 'http://forest-sat.cloudapp.net'
 # CFDIs status:
 CANCELED_STATUS = 'canceled'
 
+# Processes:
+SL1 = 'synchronization_layer_1'
+EQUALIZATION = 'equalization'
+INITIALIZATION = 'initialization'
+UPDATING = 'updating'
+
 CONSTANTS_BY_PROCESS_NAMES = {
 	'synchronization_layer_1' : SYNCHRONIZATION,
 	'synchronization_layer_2' : SYNCHRONIZATION,
@@ -67,9 +71,12 @@ CONSTANTS_BY_PROCESS_NAMES = {
 	'inicident_handler' : None
 }# End of CONSTANTS_BY_PROCESS_NAMES
 
-# Processes:
-SL1 = 'synchronization_layer_1'
-EQUALIZATION = 'equalization'
+# Status
+STATUS_DATES = {
+	'synchronization_layer_1' : 'last_sl1',
+	'equalization' : 'last_equalization',
+	'initialization' : 'initialized_at'
+}# End of STATUS_DATES
 
-
+ZLATAN = '\\0/'
 

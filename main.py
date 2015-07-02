@@ -39,6 +39,7 @@ from General import constants as _Constants
 from Processes import handler as _Processes_Handler
 from Processes.Synchronization_layer_1 import config as _SL1_Config
 from Processes.Equalization import config as _Equalization_Config
+from Processes.Initialization import config as _Initialization_config
 
 # Set environment:
 os.environ['TZ'] = _Config.general['logging']['time_zone']
@@ -61,6 +62,7 @@ time.tzset()
 
 SL1_LOGGING_CONFIG = _SL1_Config.synchronization_layer_1['logging']
 EQUALIZATION_LOGGING_CONFIG = _Equalization_Config.equalization['logging']
+INITIALIZATION_LOGGING_CONFIG = _Initialization_config.initialization['logging']
 GENERAL_LOGGING_CONFIG = _Config.general['logging']
 
 
@@ -76,6 +78,7 @@ def set_all_loggers():
 		# Process logs (every process has its logs). Also every process has subprocesses (threads) and each one of this subprocesses has its logs (this logs are created on each subprocess respectively):
 		sl1_logger = _Utilities.setup_logger(SL1_LOGGING_CONFIG['process_file_name'],path=SL1_LOGGING_CONFIG['process_path'],file_name=SL1_LOGGING_CONFIG['process_file_name'] ,file_extension=SL1_LOGGING_CONFIG['file_extension'],format=SL1_LOGGING_CONFIG['format'],level=SL1_LOGGING_CONFIG['level'])
 		equalization_logger = _Utilities.setup_logger(EQUALIZATION_LOGGING_CONFIG['process_file_name'],path=EQUALIZATION_LOGGING_CONFIG['process_path'],file_name=EQUALIZATION_LOGGING_CONFIG['process_file_name'] ,file_extension=EQUALIZATION_LOGGING_CONFIG['file_extension'],format=EQUALIZATION_LOGGING_CONFIG['format'],level=EQUALIZATION_LOGGING_CONFIG['level'])
+		initialization_logger = _Utilities.setup_logger(INITIALIZATION_LOGGING_CONFIG['process_file_name'],path=INITIALIZATION_LOGGING_CONFIG['process_path'],file_name=INITIALIZATION_LOGGING_CONFIG['process_file_name'] ,file_extension=INITIALIZATION_LOGGING_CONFIG['file_extension'],format=INITIALIZATION_LOGGING_CONFIG['format'],level=INITIALIZATION_LOGGING_CONFIG['level'])
 	except Exception as e:
 		print 'Error settion up all logs'
 		print e
