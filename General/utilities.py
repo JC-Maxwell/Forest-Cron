@@ -624,6 +624,7 @@ def set_process_unavailable(process_name,logger=None,db_Process=None):
 		process['last_triggered'] = Datetime.now()
 		process['available'] = False
 		db_Process.save(process)
+		return process['available']
 	except Exception as e:
 		# sl1_logger.critical(e.message)
 		already_handled_exception = Already_Handled_Exception(e.message)

@@ -162,7 +162,8 @@ def execute(process):
 				cron_logger.info(LOG_INDENT + 'This process will run for all taxpayers')
 			# Set unavailable:
 			cron_logger.info(LOG_INDENT + 'Setting process ' + process_name + ' unavailable')
-			_Utilities.set_process_unavailable(process_name,logger=cron_logger)
+			process_availability = _Utilities.set_process_unavailable(process_name,logger=cron_logger)
+			cron_logger.info(LOG_INDENT + process_name + ' availability: ' + str(process_availability))
 			# Update default log
 			default_log = _Utilities.add_defalut_data_to_default_log(default_log)
 			# Logging:
@@ -178,8 +179,8 @@ def execute(process):
 			cron_logger.info(2*LOG_INDENT + 'Params:       ' + str(process_params))
 			execute_with_multiprocessing(process_file_name=process_file_name,specific_process_logger=specific_process_logger,default_log=default_log,cron_logger_starting_message=cron_logger_starting_message,process_name=process_name,process_instance=process_instance,threads=threads,specific_shared_variables=specific_shared_variables,taxpayers=taxpayers)
 			_Utilities.set_process_available(process_name,logger=cron_logger)
-		# else:
-		# 	cron_logger.info(LOG_INDENT + 'End of execution')
+		else:
+			cron_logger.info(LOG_INDENT + 'End of execution')
 	except Already_Handled_Exception as already_handled_exception:
 		raise already_handled_exception
 	except Exception as e:
