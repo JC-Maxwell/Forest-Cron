@@ -33,10 +33,6 @@ LOGGING_LEVELS = {
 	'notset' : logging.NOTSET
 }# End of LOGGING_LEVELS
 
-# Processes (syncrhonization layer 2 and incident handler are for all taxpayers)
-SYNCHRONIZATION = 'keeping_syncrhonizing'
-CRON_PROCESSES = 'cron_processes'
-
 # Periods
 ONE_MONTHS_PERIOD = 1
 TWO_MONTHS_PERIOD = 2
@@ -56,19 +52,17 @@ FOREST_AZURE = 'http://forest-sat.cloudapp.net'
 # CFDIs status:
 CANCELED_STATUS = 'canceled'
 
-# Processes:
+# Processes (syncrhonization layer 2 and incident handler are for all taxpayers)
+SYNCHRONIZATION = 'synchronization'
+CRON_PROCESSES = 'cron_processes'
 SL1 = 'synchronization_layer_1'
 EQUALIZATION = 'equalization'
 INITIALIZATION = 'initialization'
-UPDATING = 'updating'
 
 CONSTANTS_BY_PROCESS_NAMES = {
 	'synchronization_layer_1' : SYNCHRONIZATION,
-	'synchronization_layer_2' : SYNCHRONIZATION,
-	'initialization' : INITIALIZATION,
-	'updating' : UPDATING,
 	'equalization' : SYNCHRONIZATION,
-	'inicident_handler' : None
+	'initialization' : INITIALIZATION
 }# End of CONSTANTS_BY_PROCESS_NAMES
 
 # Status
