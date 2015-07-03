@@ -65,7 +65,7 @@ process_handler = {
 		'process_file_name' : EQUALIZATION_LOGGING_CONFIG['process_file_name'],
 		'specific_process_logger' : _Utilities.get_logger(EQUALIZATION_LOGGING_CONFIG['process_file_name']),
 		'cron_logger_starting_message' : 'EQUALIZATION start',
-		'threads' : 1,
+		'threads' : 2,
 		'specific_shared_variables' : {
 			'current_table_row' : Value('i',EQUALIZATION_LOGGING_CONFIG['table_row_limit'])
 		},
