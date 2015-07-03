@@ -190,7 +190,7 @@ def update_taxpayer_initialization_status(taxpayer,new_initialization_data,logge
 	try:
 		taxpayer['data']['initialization'] = new_initialization_data
 		if initialized == True:
-			taxpayer['status'] = _Constants.SL1
+			taxpayer['status'] = _Constants.SYNCHRONIZATION
 		else:
 			taxpayer['data']['months_initialized'] = taxpayer['data']['months_initialized'] + 1
 		percentage_initialized = get_initialization_percentage_done(taxpayer)
