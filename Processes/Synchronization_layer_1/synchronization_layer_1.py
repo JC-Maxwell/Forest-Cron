@@ -107,8 +107,8 @@ def excute_synchronization_layer_1(taxpayers,shared_variables):# Taxpayers are t
 			else:
 				sl1_execution_log['end'] = False
 			_Locals.log_sl1_thread_logs_at_sl1_main_logs(sl1_execution_log=sl1_execution_log,sl1_logger=sl1_logger,cron_logger=cron_logger)
-			process_logger.info(2*LOG_INDENT + 'Updating taxpayer ... ')
-			_Utilities.update_taxpayer_status(taxpayer,_Constants.SL1,logger=process_logger)
+			process_logger.info(2*LOG_INDENT + 'Updating synchronization data for taxpayer ... ')
+			_Locals.update_synchronization_data_for_taxpayer(taxpayer,sl1_execution_log,logger=process_logger)
 			process_logger.info(2*LOG_INDENT + 'Synchronized successfully. Logged at SL1 main logs')
 		process_logger.info(SYNCHRONIZATION_LAYER_1_PROCESS_NAME + ' - ' + process_name.upper() + ' DONE SUCCESSFULLY \0/')
 		process_logger.info(_Constants.LOG_SEPARATOR)

@@ -89,6 +89,11 @@ def excute_initialization(taxpayers,shared_variables):# Taxpayers are the ones s
 				'year_initialized' : initialization_execution_data['year_initialized'],
 				'month_initialized' : initialization_execution_data['month_initialized'],
 				'percentage_initialized' : initialization_execution_data['percentage_initialized'],
+				# 'new' : 0,
+				# 'stored' : 0,
+				# 'year_initialized' : '2015',
+				# 'month_initialized' : '02',
+				# 'percentage_initialized' : 0,
 				'lock' : lock,
 				'current_table_row' : current_table_row
 			}# End of initialization_execution_log
@@ -98,8 +103,8 @@ def excute_initialization(taxpayers,shared_variables):# Taxpayers are the ones s
 			else:
 				initialization_execution_log['end'] = False
 			_Locals.log_initiliazation_thread_logs_at_initialization_main_logs(initialization_execution_log=initialization_execution_log,initialization_logger=initialization_logger,cron_logger=cron_logger)
-			process_logger.info(2*LOG_INDENT + 'Updating taxpayer ... ')
-			_Utilities.update_taxpayer_status(taxpayer,_Constants.INITIALIZATION,logger=process_logger)
+			process_logger.info(2*LOG_INDENT + 'Updating initialization data for taxpayer ... ')
+			_Locals.update_initialization_data_for_taxpayer(taxpayer,initialization_execution_log,logger=process_logger)
 			process_logger.info(2*LOG_INDENT + 'Synchronized successfully. Logged at SL1 main logs')
 		process_logger.info(INITIALIZATION_PROCESS_NAME + ' - ' + process_name.upper() + ' DONE SUCCESSFULLY \0/')
 		process_logger.info(_Constants.LOG_SEPARATOR)

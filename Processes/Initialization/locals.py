@@ -163,14 +163,14 @@ def get_initialization_data(taxpayer,logger=None):
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception	
 
-#  _____                                      
-# |_   _|                                     
-#   | | __ ___  ___ __   __ _ _   _  ___ _ __ 
-#   | |/ _` \ \/ / '_ \ / _` | | | |/ _ \ '__|
-#   | | (_| |>  <| |_) | (_| | |_| |  __/ |   
-#   \_/\__,_/_/\_\ .__/ \__,_|\__, |\___|_|   
-#                | |           __/ |          
-#                |_|          |___/           
+#  _   _           _       _   _               _____                                      
+# | | | |         | |     | | (_)             |_   _|                                     
+# | | | |_ __   __| | __ _| |_ _ _ __   __ _    | | __ ___  ___ __   __ _ _   _  ___ _ __ 
+# | | | | '_ \ / _` |/ _` | __| | '_ \ / _` |   | |/ _` \ \/ / '_ \ / _` | | | |/ _ \ '__|
+# | |_| | |_) | (_| | (_| | |_| | | | | (_| |   | | (_| |>  <| |_) | (_| | |_| |  __/ |   
+#  \___/| .__/ \__,_|\__,_|\__|_|_| |_|\__, |   \_/\__,_/_/\_\ .__/ \__,_|\__, |\___|_|   
+#       | |                             __/ |                | |           __/ |          
+#       |_|                            |___/                 |_|          |___/           
 
 # Get synchronization layer 1 data:
 def get_initialization_percentage_done(taxpayer,logger=None):
@@ -185,7 +185,7 @@ def get_initialization_percentage_done(taxpayer,logger=None):
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception	
 
-# Update taxpayer initialization data
+# Update taxpayer initialization status
 def update_taxpayer_initialization_status(taxpayer,new_initialization_data,logger=None,initialized=False):
 	try:
 		taxpayer['data']['initialization'] = new_initialization_data
@@ -205,7 +205,47 @@ def update_taxpayer_initialization_status(taxpayer,new_initialization_data,logge
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception	
 
+STATUS_DATES = _Constants.STATUS_DATES
 
+def update_initialization_data_for_taxpayer(taxpayer,initialization_execution_log,logger=None):
+	try:
+		forest_db = _Utilities.set_connection_to_forest_db()
+		db_Taxpayer = forest_db['Taxpayer']
+		# Update sl1 success execution date:
+		init_date = STATUS_DATES['initialization']
+		initialization_date = Datetime.now()
+		taxpayer[init_date] = initialization_date
+		# Update synchronization logs:
+		identifier = taxpayer['identifier']
+		begin_date = taxpayer['start_date']#Since taxpayer claim to be synchronized
+		begin_date = begin_date.replace(hour=0, minute=0)
+		end_date = initialization_date# Until now
+		cfdis_in_forest_db_count = _Utilities.get_cfdis_count_in_forest_for_this_taxpayer_at_period(taxpayer,begin_date,end_date)
+		initialization_log = {
+			'temporal_data' : {
+				'completed_date' : initialization_date,
+				'period' : {
+					'year' : int(initialization_execution_log['year_initialized']),
+					'month' : int(initialization_execution_log['month_initialized'])
+				},
+			},
+			'cfdis' : {
+				'new' : initialization_execution_log['stored'],
+				'updated' : 0,
+				'total' : cfdis_in_forest_db_count
+			}# End of synchronization_log
+		}# End of initialization_log
+		taxpayer_logs = taxpayer['logs'] if 'logs' in taxpayer else {}
+		taxpayer_initialization_logs = taxpayer_logs[_Constants.INITIALIZATION] if _Constants.INITIALIZATION in taxpayer_logs else []
+		taxpayer_initialization_logs.append(initialization_log)
+		taxpayer_logs[_Constants.INITIALIZATION] = taxpayer_initialization_logs
+		taxpayer['logs'] = taxpayer_logs
+		db_Taxpayer.save(taxpayer)		
+	except Exception as e:
+		if logger is not None:
+			logger.critical(e.message)
+		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception
 
 
 

@@ -72,5 +72,7 @@ STATUS_DATES = {
 	'initialization' : 'initialized_at'
 }# End of STATUS_DATES
 
+# Other
 ZLATAN = '\\0/'
+LIMIT_LOGS_PER_TAXPAYER = 10
 

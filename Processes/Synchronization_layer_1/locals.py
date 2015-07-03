@@ -271,3 +271,67 @@ def set_cancelled_status_to_cfdi(cfdi,updated_cfdi,logger=None,sl1_execution_log
 		logger.critical(e.message)
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
+
+#  _   _           _       _   _               _____                                      
+# | | | |         | |     | | (_)             |_   _|                                     
+# | | | |_ __   __| | __ _| |_ _ _ __   __ _    | | __ ___  ___ __   __ _ _   _  ___ _ __ 
+# | | | | '_ \ / _` |/ _` | __| | '_ \ / _` |   | |/ _` \ \/ / '_ \ / _` | | | |/ _ \ '__|
+# | |_| | |_) | (_| | (_| | |_| | | | | (_| |   | | (_| |>  <| |_) | (_| | |_| |  __/ |   
+#  \___/| .__/ \__,_|\__,_|\__|_|_| |_|\__, |   \_/\__,_/_/\_\ .__/ \__,_|\__, |\___|_|   
+#       | |                             __/ |                | |           __/ |          
+#       |_|                            |___/                 |_|          |___/           
+
+STATUS_DATES = _Constants.STATUS_DATES
+
+def update_synchronization_data_for_taxpayer(taxpayer,sl1_execution_log,logger=None):
+	try:
+		forest_db = _Utilities.set_connection_to_forest_db()
+		db_Taxpayer = forest_db['Taxpayer']
+		# Update sl1 success execution date:
+		sl1_date = STATUS_DATES['synchronization_layer_1']
+		synchronization_date = Datetime.now()
+		taxpayer[sl1_date] = synchronization_date
+		# Update synchronization logs:
+		identifier = taxpayer['identifier']
+		begin_date = taxpayer['start_date']#Since taxpayer claim to be synchronized
+		begin_date = begin_date.replace(hour=0, minute=0)
+		end_date = synchronization_date# Until now
+		cfdis_in_forest_db_count = _Utilities.get_cfdis_count_in_forest_for_this_taxpayer_at_period(taxpayer,begin_date,end_date)
+		synchronization_log = {
+			'temporal_data' : {
+				'completed_date' : synchronization_date,
+				'period' : {
+					'year' : synchronization_date.year,
+					'month' : synchronization_date.month
+				},
+			},
+			'cfdis' : {
+				'new' : sl1_execution_log['stored'],
+				'updated' : sl1_execution_log['updated'],
+				'total' : cfdis_in_forest_db_count
+			}# End of synchronization_log
+		}# End of synchronization_log
+		taxpayer_logs = taxpayer['logs'] if 'logs' in taxpayer else {}
+		taxpayer_synchronization_logs = taxpayer_logs[_Constants.SYNCHRONIZATION] if _Constants.SYNCHRONIZATION in taxpayer_logs else []
+		taxpayer_synchronization_logs.append(synchronization_log)
+		if len(taxpayer_synchronization_logs) > _Constants.LIMIT_LOGS_PER_TAXPAYER: 
+			taxpayer_synchronization_logs[:1] = []
+		taxpayer_logs[_Constants.SYNCHRONIZATION] = taxpayer_synchronization_logs
+		taxpayer['logs'] = taxpayer_logs
+		db_Taxpayer.save(taxpayer)		
+	except Exception as e:
+		if logger is not None:
+			logger.critical(e.message)
+		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception
+
+
+
+
+
+
+
+
+
+
+
