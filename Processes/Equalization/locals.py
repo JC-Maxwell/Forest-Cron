@@ -172,8 +172,6 @@ def store_missing_cfdis_in_corebook(missing_cfdis_in_corebook_db,identifier,logg
 				canceled = True
 			try:
 				logger.info(3*LOG_INDENT + str(n) + '. Storing ' + str(uuid) + ' in Corebook DB')
-				cfdi_status = 
-
 				result = _Corebook_SDK.create_ticket_from_xml(xml,identifier,canceled=canceled,config=STORING_CONFIGURATION)
 				log['stored'] = log['stored'] + 1
 				s = s + 1
