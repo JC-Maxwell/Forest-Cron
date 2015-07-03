@@ -222,6 +222,7 @@ def update_initialization_data_for_taxpayer(taxpayer,initialization_execution_lo
 		end_date = initialization_date# Until now
 		cfdis_in_forest_db_count = _Utilities.get_cfdis_count_in_forest_for_this_taxpayer_at_period(taxpayer,begin_date,end_date)
 		initialization_log = {
+			'status' : 200,
 			'temporal_data' : {
 				'completed_date' : initialization_date,
 				'period' : {

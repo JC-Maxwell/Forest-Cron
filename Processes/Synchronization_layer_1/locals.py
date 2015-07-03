@@ -298,6 +298,7 @@ def update_synchronization_data_for_taxpayer(taxpayer,sl1_execution_log,logger=N
 		end_date = synchronization_date# Until now
 		cfdis_in_forest_db_count = _Utilities.get_cfdis_count_in_forest_for_this_taxpayer_at_period(taxpayer,begin_date,end_date)
 		synchronization_log = {
+			'status' : 200,
 			'temporal_data' : {
 				'completed_date' : synchronization_date,
 				'period' : {
