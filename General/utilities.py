@@ -650,14 +650,20 @@ def set_process_available(process_name,process_duration=0,logger=None,db_Process
 		process['executions_counter'] = executions_counter + 1
 		process['average_duration'] = new_total_of_durations/process['executions_counter']
 		process['available'] = True
-		del process['current_taxpayer']
-		del process['current_taxpayer_index']
-		del process['current_taxpayer_triggered']
-		del process['total_taxpayers']
-		del process['percentage_done']
+		if 'current_taxpayer' in process:
+			del process['current_taxpayer'] 
+		if 'current_taxpayer_index' in process:
+			del process['current_taxpayer_index']
+		if 'current_taxpayer_triggered' in process:
+			del process['current_taxpayer_triggered']
+		if 'total_taxpayers' in process:
+			del process['total_taxpayers']
+		if 'percentage_done' in process:
+			del process['percentage_done']
 		db_Process.save(process)
 	except Exception as e:
-		# sl1_logger.critical(e.message)
+		if logger is not None:
+			logger.critical(e.message)
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
