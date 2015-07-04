@@ -89,6 +89,7 @@ def excute_initialization(taxpayers,shared_variables):# Taxpayers are the ones s
 				'year_initialized' : initialization_execution_data['year_initialized'],
 				'month_initialized' : initialization_execution_data['month_initialized'],
 				'percentage_initialized' : initialization_execution_data['percentage_initialized'],
+				'initialized' : initialization_execution_data['initialized'],
 				# 'new' : 0,
 				# 'stored' : 0,
 				# 'year_initialized' : '2015',
@@ -174,6 +175,7 @@ def excute_initialization_for_taxpayer(taxpayer=None,process_logger=None):
 		new_initialization_data = initialization_data['new_initialization_data']
 		taxpayer = _Locals.update_taxpayer_initialization_status(taxpayer,new_initialization_data,logger=process_logger,initialized=initialized)
 		initialization_result['percentage_initialized'] = taxpayer['data']['percentage_initialized']
+		initialization_result['initialized'] = initialized
 		process_logger.info(3*LOG_INDENT + 'Percentage initialized:            ' + str(initialization_result['percentage_initialized']))
 		return initialization_result
 	except Already_Handled_Exception as already_handled_exception:

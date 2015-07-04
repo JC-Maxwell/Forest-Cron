@@ -215,32 +215,33 @@ def update_initialization_data_for_taxpayer(taxpayer,initialization_execution_lo
 		init_date = STATUS_DATES['initialization']
 		initialization_date = Datetime.now()
 		taxpayer[init_date] = initialization_date
-		# Update synchronization logs:
-		identifier = taxpayer['identifier']
-		begin_date = taxpayer['start_date']#Since taxpayer claim to be synchronized
-		begin_date = begin_date.replace(hour=0, minute=0)
-		end_date = initialization_date# Until now
-		cfdis_in_forest_db_count = _Utilities.get_cfdis_count_in_forest_for_this_taxpayer_at_period(taxpayer,begin_date,end_date)
-		initialization_log = {
-			'status' : 200,
-			'temporal_data' : {
-				'completed_date' : initialization_date,
-				'period' : {
-					'year' : int(initialization_execution_log['year_initialized']),
-					'month' : int(initialization_execution_log['month_initialized'])
+		if initialization_execution_log['initialized'] == False:
+			# Update synchronization logs:
+			identifier = taxpayer['identifier']
+			begin_date = taxpayer['start_date']#Since taxpayer claim to be synchronized
+			begin_date = begin_date.replace(hour=0, minute=0)
+			end_date = initialization_date
+			cfdis_in_forest_db_count = _Utilities.get_cfdis_count_in_forest_for_this_taxpayer_at_period(taxpayer,begin_date,end_date)
+			initialization_log = {
+				'status' : 200,
+				'temporal_data' : {
+					'completed_date' : initialization_date,
+					'period' : {
+						'year' : int(initialization_execution_log['year_initialized']),
+						'month' : int(initialization_execution_log['month_initialized'])
+					},
 				},
-			},
-			'cfdis' : {
-				'new' : initialization_execution_log['stored'],
-				'updated' : 0,
-				'total' : cfdis_in_forest_db_count
-			}# End of synchronization_log
-		}# End of initialization_log
-		taxpayer_logs = taxpayer['logs'] if 'logs' in taxpayer else {}
-		taxpayer_initialization_logs = taxpayer_logs[_Constants.INITIALIZATION] if _Constants.INITIALIZATION in taxpayer_logs else []
-		taxpayer_initialization_logs.append(initialization_log)
-		taxpayer_logs[_Constants.INITIALIZATION] = taxpayer_initialization_logs
-		taxpayer['logs'] = taxpayer_logs
+				'cfdis' : {
+					'new' : initialization_execution_log['stored'],
+					'updated' : 0,
+					'total' : cfdis_in_forest_db_count
+				}# End of synchronization_log
+			}# End of initialization_log
+			taxpayer_logs = taxpayer['logs'] if 'logs' in taxpayer else {}
+			taxpayer_initialization_logs = taxpayer_logs[_Constants.INITIALIZATION] if _Constants.INITIALIZATION in taxpayer_logs else []
+			taxpayer_initialization_logs.append(initialization_log)
+			taxpayer_logs[_Constants.INITIALIZATION] = taxpayer_initialization_logs
+			taxpayer['logs'] = taxpayer_logs
 		db_Taxpayer.save(taxpayer)		
 	except Exception as e:
 		if logger is not None:
