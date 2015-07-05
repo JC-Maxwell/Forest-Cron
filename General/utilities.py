@@ -350,7 +350,7 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 		forest_db = set_connection_to_forest_db()
 		db_Taxpayer = forest_db['Taxpayer']
 		if process_name == _Constants.EQUALIZATION:
-			taxpayers_filter = { 'identifier' : 'OOCJ5605273G6' }
+			taxpayers_filter = {}
 		else:
 			taxpayers_filter = { 'status' : process_constant }
 		if limit is not None and from_taxpayer is None:
