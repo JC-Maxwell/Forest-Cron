@@ -382,15 +382,19 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 # Create a new taxpayer dict:
 def create_new_taxpayer(db_taxpayer):
 	try:
-		# new_taxpayer = {
-		# 	'identifier' : db_taxpayer['identifier'],
-		# 	'password' : db_taxpayer['password'],
-		# 	'start_date' : db_taxpayer['start_date'],
-		# 	'status' : db_taxpayer['start_date'],
-		# 	'created_at' : db_taxpayer['start_date'],
-		# 	'firmware_timeout' : db_taxpayer['firmware_timeout']
-		# }#End of new_taxpayer
-		return db_taxpayer
+		new_taxpayer = {# Building a new dict avoids cursor invalidation at server
+			'status' : db_taxpayer['status'],
+			'password' : db_taxpayer['password'],
+			'identifier' : db_taxpayer['identifier'],
+			'logs' : db_taxpayer['logs'],
+			'created_at' : db_taxpayer['created_at'],
+			'last_sl1' : db_taxpayer['last_sl1'],
+			'firmware_timeout' : db_taxpayer['firmware_timeout'],
+			'initialized_at' : db_taxpayer['initialized_at'],
+			'data' : db_taxpayer['data'],
+			'start_date' : db_taxpayer['start_date']
+		}#End of new_taxpayer
+		return new_taxpayer
 	except Exception as e:
 		# sl1_logger.critical(e.message)
 		already_handled_exception = Already_Handled_Exception(e.message)
