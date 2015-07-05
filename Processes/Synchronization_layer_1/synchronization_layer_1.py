@@ -165,7 +165,7 @@ def excute_synchronization_layer_1_for_taxpayer(taxpayer=None,sl1_data=None,proc
 				process_logger.info(3*LOG_INDENT + str(n) + '. ' + uuid + ' stored in Forest DB')
 		# Update Forest DB -> JUST UPDATING:
 		process_logger.info(2*LOG_INDENT + 'UPDATING FOREST DB (updating existing CFDIs) ... ')
-		cfdis_in_db = _Utilities.get_cfdis_in_forest_for_this_taxpayer_at_period(taxpayer,sl1_data['begin_date'],sl1_data['end_date'])# Get cfdis for updating data (They must be retrieved again due to cursor timeout problems):
+		cfdis_in_db = _Utilities.get_cfdis_in_forest_for_this_taxpayer_at_period(taxpayer,sl1_data['begin_date'],sl1_data['end_date'])# Get cfdis for updating data (They must be retrieved again due to cursor invalidation problems):
 		updated_cfdi_uuids = []
 		updated_cfdis_status_by_uuid = {}
 		cfdis_with_status_updated = 0;

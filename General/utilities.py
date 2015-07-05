@@ -731,7 +731,7 @@ def get_current_fiscal_declaration_period(period):
 		months_of_the_period = [];
 		if period == _Constants.TWO_MONTHS_PERIOD:
 			months_of_the_period.append(today.month);# First month
-			if (today.month % 2) == 0:# If today month if the second month of the period then the previous month also must be synchronized
+			if today.month != 1:# Always return current month and previous month (except in january)
 				months_of_the_period.append(today.month-1)
 		months_of_the_period = sorted(months_of_the_period)
 		for i in range(len(months_of_the_period)):
