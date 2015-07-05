@@ -350,7 +350,7 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 		forest_db = set_connection_to_forest_db()
 		db_Taxpayer = forest_db['Taxpayer']
 		if process_name == _Constants.EQUALIZATION:
-			taxpayers_filter = {}
+			taxpayers_filter = { 'identifier' : 'OOCJ5605273G6' }
 		else:
 			taxpayers_filter = { 'status' : process_constant }
 		if limit is not None and from_taxpayer is None:
@@ -383,6 +383,7 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 def create_new_taxpayer(db_taxpayer,logger=None):
 	try:
 		new_taxpayer = {# Building a new dict avoids cursor invalidation at server
+			'_id' : db_taxpayer['_id'],
 			'status' : db_taxpayer['status'],
 			'password' : db_taxpayer['password'],
 			'identifier' : db_taxpayer['identifier'],
