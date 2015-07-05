@@ -344,7 +344,7 @@ def update_taxpayer_firmware_timeout(taxpayer,logger=None):
 		raise already_handled_exception
 
 # Retrieve all taxpayers that must be iterated in a specific process (i.e. syncrhonizing, initializing, updating and so on)
-def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=None):
+def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=None,logger=None):
 	try:
 		process_constant = CONSTANTS_BY_PROCESS_NAMES[process_name]
 		forest_db = set_connection_to_forest_db()
@@ -364,14 +364,14 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 				if db_taxpayer['identifier'] == from_taxpayer:# Functions because they are sorted
 					from_here = True
 				if from_here:
-					taxpayer = create_new_taxpayer(db_taxpayer)
+					taxpayer = create_new_taxpayer(db_taxpayer,logger=logger)
 					taxpayers.append(taxpayer)
 					if limit is not None:
 						if len(taxpayers) > limit:
 							break
 		else:
 			for db_taxpayer in db_taxpayers:
-				taxpayer = create_new_taxpayer(db_taxpayer)
+				taxpayer = create_new_taxpayer(db_taxpayer,logger=logger)
 				taxpayers.append(taxpayer)
 		return taxpayers
 	except Exception as e:
@@ -380,23 +380,24 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 		raise already_handled_exception
 
 # Create a new taxpayer dict:
-def create_new_taxpayer(db_taxpayer):
+def create_new_taxpayer(db_taxpayer,logger=None):
 	try:
 		new_taxpayer = {# Building a new dict avoids cursor invalidation at server
 			'status' : db_taxpayer['status'],
 			'password' : db_taxpayer['password'],
 			'identifier' : db_taxpayer['identifier'],
-			'logs' : db_taxpayer['logs'],
+			'logs' : db_taxpayer['logs'] if 'logs' in db_taxpayer else None,
 			'created_at' : db_taxpayer['created_at'],
-			'last_sl1' : db_taxpayer['last_sl1'],
-			'firmware_timeout' : db_taxpayer['firmware_timeout'],
-			'initialized_at' : db_taxpayer['initialized_at'],
-			'data' : db_taxpayer['data'],
+			'last_sl1' : db_taxpayer['last_sl1'] if 'last_sl1' in db_taxpayer else None,
+			'firmware_timeout' : db_taxpayer['firmware_timeout'] if 'firmware_timeout' in db_taxpayer else None,
+			'initialized_at' : db_taxpayer['initialized_at'] if 'initialized_at' in db_taxpayer else None,
+			'data' : db_taxpayer['data'] if 'data' in db_taxpayer else None,
 			'start_date' : db_taxpayer['start_date']
 		}#End of new_taxpayer
 		return new_taxpayer
 	except Exception as e:
-		# sl1_logger.critical(e.message)
+		if logger is not None:
+			logger.critical(e.message)
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 

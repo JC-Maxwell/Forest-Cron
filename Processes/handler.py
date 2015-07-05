@@ -168,7 +168,7 @@ def execute(process):
 			cron_logger.info(LOG_INDENT + 'Logging calling at cron procesess ... ')
 			_Utilities.log_at_cron_processes(process)		
 			cron_logger.info(LOG_INDENT + 'Getting taxpayers for this process ... ')
-			taxpayers = _Utilities.get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=from_taxpayer)
+			taxpayers = _Utilities.get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=from_taxpayer,logger=cron_logger)
 			# Set unavailable:
 			cron_logger.info(LOG_INDENT + 'Setting process ' + process_name + ' unavailable')
 			process_availability = _Utilities.set_process_unavailable(process_name,taxpayers=taxpayers,logger=cron_logger)
