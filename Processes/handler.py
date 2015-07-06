@@ -141,6 +141,8 @@ def execute(process):
 		process_params = process['params']
 		cron_logger.info(LOG_INDENT + 'Validating process ... ')
 		process_is_valid = validate(process_name)
+		cron_logger.info(LOG_INDENT + 'Updating cron db log ... ')
+		_Utilities.update_cron_process_log(process_name,logger=cron_logger)
 		if process_is_valid:
 			cron_logger.info(LOG_INDENT + 'Getting instance of ' + process_name)
 			# Process data:
