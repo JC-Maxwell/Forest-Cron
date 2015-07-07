@@ -325,7 +325,7 @@ def set_connection_to_forest_db():
 
 # Description: Functions for handling taxpayers
 
-CONSTANTS_BY_PROCESS_NAMES = _Constants.CONSTANTS_BY_PROCESS_NAMES
+FILTERS_BY_PROCESS_NAMES = _Constants.FILTERS_BY_PROCESS_NAMES
 
 def update_taxpayer_firmware_timeout(taxpayer,logger=None):
 	try:
@@ -346,17 +346,13 @@ def update_taxpayer_firmware_timeout(taxpayer,logger=None):
 # Retrieve all taxpayers that must be iterated in a specific process (i.e. syncrhonizing, initializing, updating and so on)
 def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=None,logger=None):
 	try:
-		process_constant = CONSTANTS_BY_PROCESS_NAMES[process_name]
+		process_name_filter = FILTERS_BY_PROCESS_NAMES[process_name]
 		forest_db = set_connection_to_forest_db()
 		db_Taxpayer = forest_db['Taxpayer']
-		if process_name == _Constants.EQUALIZATION:
-			taxpayers_filter = {}
-		else:
-			taxpayers_filter = { 'status' : process_constant }
 		if limit is not None and from_taxpayer is None:
-			db_taxpayers = db_Taxpayer.find(taxpayers_filter).limit(limit).sort('created_at',1)
+			db_taxpayers = db_Taxpayer.find(process_name_filter).limit(limit).sort('created_at',1)
 		else:
-			db_taxpayers = db_Taxpayer.find(taxpayers_filter).sort('created_at',1)
+			db_taxpayers = db_Taxpayer.find(process_name_filter).sort('created_at',1)
 		taxpayers = []
 		if from_taxpayer is not None:
 			from_here = False

@@ -58,12 +58,13 @@ CRON_PROCESSES = 'cron_processes'
 SL1 = 'synchronization_layer_1'
 EQUALIZATION = 'equalization'
 INITIALIZATION = 'initialization'
+UPDATING = 'updating'
 
-CONSTANTS_BY_PROCESS_NAMES = {
-	'synchronization_layer_1' : SYNCHRONIZATION,
-	'equalization' : SYNCHRONIZATION,
-	'initialization' : INITIALIZATION
-}# End of CONSTANTS_BY_PROCESS_NAMES
+FILTERS_BY_PROCESS_NAMES = {
+	'equalization' : {},# Equalization query for all taxpayers
+	'synchronization_layer_1' : { 'status' : SYNCHRONIZATION },# SL1 query for taxpayers in synchronization status
+	'initialization' : { 'status' : { '$in' : [INITIALIZATION,UPDATING] }}# Initialization query for taxpayers in initialization or updating status
+}# End of FILTERS_BY_PROCESS_NAMES
 
 # Status
 STATUS_DATES = {
