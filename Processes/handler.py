@@ -184,7 +184,10 @@ def execute(process):
 			execute_with_multiprocessing(process_file_name=process_file_name,specific_process_logger=specific_process_logger,default_log=default_log,cron_logger_starting_message=cron_logger_starting_message,process_name=process_name,process_instance=process_instance,threads=threads,specific_shared_variables=specific_shared_variables,taxpayers=taxpayers)
 			end_time = time.time()
 			process_duration = (end_time - start_time)/3600# in hours
-			_Utilities.set_process_available(process_name,process_duration=process_duration,logger=cron_logger)
+			log_process_duration = False:
+			if len(taxpayers) > 0:
+				log_process_duration == True
+			_Utilities.set_process_available(process_name,process_duration=process_duration,logger=cron_logger,log_process_duration=log_process_duration)
 		else:
 			cron_logger.info(LOG_INDENT + 'End of execution')
 	except Already_Handled_Exception as already_handled_exception:

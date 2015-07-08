@@ -638,19 +638,20 @@ def set_process_unavailable(process_name,taxpayers=[],logger=None,db_Process=Non
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
-def set_process_available(process_name,process_duration=0,logger=None,db_Process=None):
+def set_process_available(process_name,process_duration=0,logger=None,db_Process=None,log_process_duration):
 	try:
 		if db_Process is None:
 			forest_db = set_connection_to_forest_db()
 			db_Process = forest_db['Process']
 		process = get_db_process(process_name,logger=logger)
 		process['last_completed'] = Datetime.now()
-		executions_counter = process['executions_counter'] if 'executions_counter' in process else 0
-		average_duration = process['average_duration'] if 'average_duration' in process else 0
-		total_of_durations = average_duration*executions_counter
-		new_total_of_durations = total_of_durations + process_duration
-		process['executions_counter'] = executions_counter + 1
-		process['average_duration'] = new_total_of_durations/process['executions_counter']
+		if log_process_duration is True:
+			executions_counter = process['executions_counter'] if 'executions_counter' in process else 0
+			average_duration = process['average_duration'] if 'average_duration' in process else 0
+			total_of_durations = average_duration*executions_counter
+			new_total_of_durations = total_of_durations + process_duration
+			process['executions_counter'] = executions_counter + 1
+			process['average_duration'] = new_total_of_durations/process['executions_counter']
 		process['available'] = True
 		if 'current_taxpayer' in process:
 			del process['current_taxpayer'] 
