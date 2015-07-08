@@ -141,22 +141,22 @@ def get_initialization_data(taxpayer,logger=None):
 				del new_initialization_data[year]
 				year = None
 		if year is None and month is None:
-			initialization_dat = {
+			initialization_data = {
 				'initialized' : True,
 				'new_initialization_data' : new_initialization_data
-			}# End of initialization_dat
+			}# End of initialization_data
 		else:
 			begin_date = Datetime(int(year),int(month),1)
 			end_date = Datetime(int(year),int(month),_Utilities.get_month_days(month))
-			initialization_dat = {
+			initialization_data = {
 				'initialized' : False,
 				'new_initialization_data' : new_initialization_data,
 				'year' : year,
 				'month' : month,
 				'begin_date' : begin_date,
 				'end_date' : end_date
-			}# End of initialization_dat
-		return initialization_dat
+			}# End of initialization_data
+		return initialization_data
 	except Exception as e:
 		if logger is not None:
 			logger.critical(e.message)
@@ -177,6 +177,8 @@ def get_initialization_percentage_done(taxpayer,logger=None):
 	try:
 		total_months_to_initialize = taxpayer['data']['total_months_to_initialize']
 		months_initialized = taxpayer['data']['months_initialized']
+		if months_initialized > total_months_to_initialize:
+			months_initialized = total_months_to_initialize
 		percentage_done = _Utilities.get_percentage_done(months_initialized,total_months_to_initialize,logger=logger)
 		return percentage_done		
 	except Exception as e:
