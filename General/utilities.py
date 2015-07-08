@@ -638,7 +638,7 @@ def set_process_unavailable(process_name,taxpayers=[],logger=None,db_Process=Non
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
-def set_process_available(process_name,process_duration=0,logger=None,db_Process=None,log_process_duration):
+def set_process_available(process_name,process_duration=0,logger=None,db_Process=None,log_process_duration=False):
 	try:
 		if db_Process is None:
 			forest_db = set_connection_to_forest_db()
