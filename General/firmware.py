@@ -36,6 +36,11 @@ LOG_INDENT = _Constants.LOG_INDENT
 # Firmware url:
 FIRMWARE_URL = _Constants.FIRMWARE_URL
 CALLING_FIRMWARE = '         Sending request to Forest-Firmware'
+AVOID_FIRMWARE = True
+DEFAULT_FIRMWARE_RESULT = {
+	'new' : [],
+	'updated' : []
+}# End of DEFAULT_FIRMWARE_RESULT
 
 def callback(**params):
 	try:
@@ -50,17 +55,20 @@ def callback(**params):
 		del params['log']
 		payload = params
 		headers = {'content-type':'application/json'}
-		firmware_result = requests.post(url, data=json.dumps(payload), headers=headers)
-		if firmware_result.status_code == 200:
-			firmware_result_json = firmware_result.json()
-			log['firmware']['new'] = len(firmware_result_json['new'])
-			log['firmware']['update'] = len(firmware_result_json['updated'])
-			return firmware_result_json
+		if AVOID_FIRMWARE is not True:
+			firmware_result = requests.post(url, data=json.dumps(payload), headers=headers)
+			if firmware_result.status_code == 200:
+				firmware_result_json = firmware_result.json()# Comment in case of simulation
+				log['firmware']['new'] = len(firmware_result_json['new'])
+				log['firmware']['update'] = len(firmware_result_json['updated'])
+				return firmware_result_json
+			else:
+				if logger is not None:
+					logger.critical('Firmware error')
+					logger.critical(firmware_result)
+				return DEFAULT_FIRMWARE_RESULT
 		else:
-			if logger is not None:
-				logger.critical('Firmware error')
-				logger.critical(firmware_result)
-			return { 'new' : [], 'updated' : [] }	
+			return DEFAULT_FIRMWARE_RESULT
 	except Exception as e:
 		logger.info(3*LOG_INDENT + str(e))
 		_Utilities.update_taxpayer_firmware_timeout(taxpayer,logger=logger)

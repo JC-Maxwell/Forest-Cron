@@ -128,7 +128,7 @@ def excute_initialization_for_taxpayer(taxpayer=None,process_logger=None):
 			process_logger.info(2*LOG_INDENT + 'RETRIEVING DATA FROM FOREST DB ... ')
 			process_logger.info(3*LOG_INDENT + 'Year: ' + str(initialization_data['year']) + ' Month: ' + str(initialization_data['month']))
 			process_logger.info(3*LOG_INDENT + 'From ' + str(initialization_data['begin_date']) + ' to ' + str(initialization_data['end_date']))
-			cfdis_in_db = _Utilities.get_cfdis_in_forest_for_this_taxpayer_at_period(taxpayer,initialization_data['begin_date'],initialization_data['end_date'])
+			cfdis_in_db = _Utilities.get_cfdis_in_forest_for_this_taxpayer_at_period(taxpayer,initialization_data['begin_date'],initialization_data['end_date'],limit=None)
 			# Manage or format CFDis data:
 			existing_cfdi_uuids = _Utilities.get_existing_uuids_in_forest_db(cfdis_in_db=cfdis_in_db,logger=process_logger)
 			# Log Forest data:

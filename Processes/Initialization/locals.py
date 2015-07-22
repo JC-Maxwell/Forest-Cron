@@ -239,19 +239,18 @@ def update_initialization_data_for_taxpayer(taxpayer,initialization_execution_lo
 					'total' : cfdis_in_forest_db_count
 				}# End of synchronization_log
 			}# End of initialization_log
-			taxpayer_logs = taxpayer['logs'] if 'logs' in taxpayer else {}
+			taxpayer_logs = taxpayer['logs'] if 'logs' in taxpayer and taxpayer['logs'] is not None else {}
 			taxpayer_initialization_logs = taxpayer_logs[_Constants.INITIALIZATION] if _Constants.INITIALIZATION in taxpayer_logs else []
 			taxpayer_initialization_logs.append(initialization_log)
 			taxpayer_logs[_Constants.INITIALIZATION] = taxpayer_initialization_logs
 			taxpayer['logs'] = taxpayer_logs
 		db_Taxpayer.save(taxpayer)		
 	except Exception as e:
+		print e
 		if logger is not None:
 			logger.critical(e.message)
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
-
-
 
 
 
