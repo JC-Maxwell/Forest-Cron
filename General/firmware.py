@@ -36,7 +36,7 @@ LOG_INDENT = _Constants.LOG_INDENT
 # Firmware url:
 FIRMWARE_URL = _Constants.FIRMWARE_URL
 CALLING_FIRMWARE = '         Sending request to Forest-Firmware'
-AVOID_FIRMWARE = True
+AVOID_FIRMWARE = False
 DEFAULT_FIRMWARE_RESULT = {
 	'new' : [],
 	'updated' : []
