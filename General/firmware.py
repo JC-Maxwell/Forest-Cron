@@ -71,12 +71,16 @@ def callback(**params):
 			return DEFAULT_FIRMWARE_RESULT
 	except Exception as e:
 		logger.info(3*LOG_INDENT + str(e))
-		_Utilities.update_taxpayer_firmware_timeout(taxpayer,logger=logger)
+		# -------------------------------------------------------------------
+		# bugSolved 12/Ago/15 
+		# Event: timeout value was becoming longer and longer because of connection problems (firmware servers could not be reached due to connection problems instead of logic problems)
+		# _Utilities.update_taxpayer_firmware_timeout(taxpayer,logger=logger)# firmware timeout updating was avoided
+		# -------------------------------------------------------------------
 		raise e
 
 def isa(**params):
 	timeout = params['timeout']
-	# Execute firmware with a timeout of 10 seconds
+	# Execute firmware with a timeout of n seconds
 	firmware_result_json = _Utilities.set_timeout(callback,kwargs=params,timeout_duration=timeout,default={ 'new' : [], 'updated' : [] })
 	return firmware_result_json
 	

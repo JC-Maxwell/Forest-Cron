@@ -832,6 +832,8 @@ def set_timeout(func, args=(), kwargs={}, timeout_duration=5, default=None):
 		result = func(*args,**kwargs)
 	except TimeoutError as exc:
 		result = default
+	except Exception as exc:
+		result = default
 	return result
 
 

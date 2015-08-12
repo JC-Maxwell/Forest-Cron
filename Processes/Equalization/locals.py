@@ -146,8 +146,8 @@ def get_missing_cfdis_in_each_db(cfdis_in_forest_db,cfdis_in_corebook_db):
 
 # With this configuration CFDIs are going to be stored in Corebook
 STORING_CONFIGURATION = {
-	'test' : False,
-	'predict' : False,# Each CFDI will be predicted
+	'test' : False,# Store as testing object in db
+	'predict' : True,# Each CFDI will be predicted
 	'store' : True,# Will be stored
 	'replace' : True,# If already exists a ticket with this uuid it will be replaced
 	'indent' : 2*LOG_INDENT# Just for logging
