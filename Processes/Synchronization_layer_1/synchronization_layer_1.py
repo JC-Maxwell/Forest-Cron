@@ -148,7 +148,7 @@ def excute_synchronization_layer_1_for_taxpayer(taxpayer=None,sl1_data=None,proc
 		# firmware_timeout = taxpayer['firmware_timeout'] if 'firmware_timeout' in taxpayer and taxpayer['firmware_timeout'] is not None else _Constants.DEFAULT_FIRMWARE_TIMEOUT
 		firmware_timeout = _Constants.DEFAULT_FIRMWARE_TIMEOUT
 		# -------------------------------------------------------------------
-		process_logger.info(2*LOG_INDENT + 'RETRIEVING DATA FROM FIRMWARE (SAT) timeout = ' + str(firmware_timeout) + ' secs')
+		process_logger.info(2*LOG_INDENT + 'RETRIEVING DATA FROM FIRMWARE (SAT) constant timeout = ' + str(firmware_timeout) + ' secs')
 		sat_updates = _Firmware.isa(instruction='get_sat_updates',params=get_sat_updates_params,log=sl1_execution_log,logger=process_logger,timeout=firmware_timeout,taxpayer=taxpayer)
 		new_cfdis = sat_updates['new']
 		updated_cfdis = sat_updates['updated']
