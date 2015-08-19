@@ -503,8 +503,8 @@ def get_cfdis_count_in_forest_for_this_taxpayer_at_period(taxpayer,begin_date,en
 		forest_db = set_connection_to_forest_db()
 		db_CFDI = forest_db['CFDI']
 		cfdis_in_db = []
-		cfdis_issued_in_db = db_CFDI.find({ 'xml' : { '$exists' : True }, 'seller': taxpayer['identifier'], 'certification_date':  {'$gte': begin_date, '$lte': end_date} }).count()
-		cfdis_received_in_db = db_CFDI.find({ 'xml' : { '$exists' : True }, 'buyer': taxpayer['identifier'], 'certification_date': {'$gte': begin_date, '$lte': end_date} }).count()
+		cfdis_issued_in_db = db_CFDI.find({ 'xml' : { '$exists' : True, '$ne' : '' }, 'seller': taxpayer['identifier'], 'certification_date':  {'$gte': begin_date, '$lte': end_date} }).count()
+		cfdis_received_in_db = db_CFDI.find({ 'xml' : { '$exists' : True, '$ne' : '' }, 'buyer': taxpayer['identifier'], 'certification_date': {'$gte': begin_date, '$lte': end_date} }).count()
 		cfdis_count = cfdis_issued_in_db + cfdis_received_in_db
 		return cfdis_count
 	except Exception as e:
@@ -519,11 +519,11 @@ def get_cfdis_in_forest_for_this_taxpayer_at_period(taxpayer,begin_date,end_date
 		db_CFDI = forest_db['CFDI']
 		cfdis_in_db = []
 		if limit is None:
-			cfdis_issued_in_db = db_CFDI.find({ 'xml' : { '$exists' : True }, 'seller': taxpayer['identifier'], 'certification_date':  {'$gte': begin_date, '$lte': end_date} })
-			cfdis_received_in_db = db_CFDI.find({ 'xml' : { '$exists' : True }, 'buyer': taxpayer['identifier'], 'certification_date': {'$gte': begin_date, '$lte': end_date} })
+			cfdis_issued_in_db = db_CFDI.find({ 'xml' : { '$exists' : True, '$ne' : '' }, 'seller': taxpayer['identifier'], 'certification_date':  {'$gte': begin_date, '$lte': end_date} })
+			cfdis_received_in_db = db_CFDI.find({ 'xml' : { '$exists' : True, '$ne' : '' }, 'buyer': taxpayer['identifier'], 'certification_date': {'$gte': begin_date, '$lte': end_date} })
 		else:
-			cfdis_issued_in_db = db_CFDI.find({ 'xml' : { '$exists' : True }, 'seller': taxpayer['identifier'], 'certification_date':  {'$gte': begin_date, '$lte': end_date} }).limit(limit)
-			cfdis_received_in_db = db_CFDI.find({ 'xml' : { '$exists' : True }, 'buyer': taxpayer['identifier'], 'certification_date': {'$gte': begin_date, '$lte': end_date} }).limit(limit)
+			cfdis_issued_in_db = db_CFDI.find({ 'xml' : { '$exists' : True, '$ne' : '' }, 'seller': taxpayer['identifier'], 'certification_date':  {'$gte': begin_date, '$lte': end_date} }).limit(limit)
+			cfdis_received_in_db = db_CFDI.find({ 'xml' : { '$exists' : True, '$ne' : '' }, 'buyer': taxpayer['identifier'], 'certification_date': {'$gte': begin_date, '$lte': end_date} }).limit(limit)
 		for cfdi_issued_in_db in cfdis_issued_in_db:
 			cfdis_in_db.append(cfdi_issued_in_db)
 		for cfdi_received_in_db in cfdis_received_in_db:

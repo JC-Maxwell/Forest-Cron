@@ -51,6 +51,8 @@ FOREST_AZURE = 'http://forest-sat.cloudapp.net'
 
 # CFDIs status:
 CANCELED_STATUS = 'canceled'
+VALID_STATUS = 'valid'
+CB_CANCELED_FISCAL_STATUS = 4
 
 # Processes (syncrhonization layer 2 and incident handler are for all taxpayers)
 SYNCHRONIZATION = 'synchronization'

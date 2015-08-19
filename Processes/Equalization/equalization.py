@@ -159,17 +159,20 @@ def equalize_dbs_for_a_taxpayer(taxpayer=None,process_logger=None):
 		process_logger.info(2*LOG_INDENT + 'Getting differences in dbs ... ')
 		# _Utilities.log_cfdis_uuids(title='Forest CFDIs: ',indent=2*LOG_INDENT,cfdis=cfdis_in_forest_db,logger=process_logger,dict=True)
 		# _Utilities.log_cfdis_uuids(title='Corebook CFDIs: ',indent=2*LOG_INDENT,cfdis=cfdis_in_corebook_db,logger=process_logger,dict=True)
-		missing_cfdis = _Locals.get_missing_cfdis_in_each_db(cfdis_in_forest_db,cfdis_in_corebook_db)
+		missing_cfdis = _Locals.get_missing_cfdis_in_each_db(cfdis_in_forest_db,cfdis_in_corebook_db,logger=process_logger)
 		missing_cfdis_in_corebook_db = missing_cfdis['in_corebook_db']
 		missing_cfdis_in_forest_db = missing_cfdis['in_forest_db']
+		cfdis_with_different_status = missing_cfdis['cfdis_with_different_status']
 		# General status:
 		log['before']['f_but_not_in_cb'] = len(missing_cfdis_in_corebook_db)
 		log['before']['cb_but_not_in_f'] = len(missing_cfdis_in_forest_db)
+		log['before']['cfdis_with_different_status'] = cfdis_with_different_status
 		process_logger.info(2*LOG_INDENT + 'DBs Status: ')
 		process_logger.info(3*LOG_INDENT + 'Forest DB   -> ' + str(log['before']['forest_db']))
 		process_logger.info(3*LOG_INDENT + 'Corebook DB -> ' + str(log['before']['corebook_db']))
-		process_logger.info(3*LOG_INDENT + 'F not in CB -> ' + str(log['before']['f_but_not_in_cb']))
+		process_logger.info(3*LOG_INDENT + 'F not in CB -> ' + str(log['before']['f_but_not_in_cb'] - log['before']['cfdis_with_different_status']))
 		process_logger.info(3*LOG_INDENT + 'CB not in F -> ' + str(log['before']['cb_but_not_in_f']))
+		process_logger.info(3*LOG_INDENT + 'Diff Status -> ' + str(log['before']['cfdis_with_different_status']))
 		if len(missing_cfdis_in_corebook_db) > 0:
 			# _Utilities.log_cfdis_uuids(title='Missing CFDIs: ',indent=2*LOG_INDENT,cfdis=missing_cfdis_in_corebook_db,logger=process_logger)
 			# log['after']['stored'] = len(missing_cfdis_in_corebook_db)

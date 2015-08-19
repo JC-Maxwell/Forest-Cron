@@ -83,6 +83,7 @@ def get_cfdis_in_corebook_for_this_taxpayer_at_period(identifier,begin_date,end_
 		corebook_db = _Utilities.set_connection_to_corebook_db()
 		db_Ticket = corebook_db['Ticket']
 		db_User = corebook_db['User']
+		db_Transaction = corebook_db['Transaction']
 		# Get user:
 		user_filter = { 'identifier' : identifier }
 		user_exists = db_User.find(user_filter).count()
@@ -94,6 +95,40 @@ def get_cfdis_in_corebook_for_this_taxpayer_at_period(identifier,begin_date,end_
 				cfdis_in_corebook_db = db_Ticket.find(ticket_filter)
 			else:
 				cfdis_in_corebook_db = db_Ticket.find(ticket_filter).limit(limit)
+			# Parse cursors to list:
+			cfdis_in_corebook_db_list = []
+			for cfdi_in_corebook_db in cfdis_in_corebook_db:
+				cfdis_in_corebook_db_list.append(cfdi_in_corebook_db)
+			cfdis_in_corebook_db = cfdis_in_corebook_db_list
+			# Add transaction data to cfdi:
+			transaction_ids = []
+			for cfdi_in_corebook_db in list(cfdis_in_corebook_db):
+				if 'transaction' in cfdi_in_corebook_db:
+					transaction_id = cfdi_in_corebook_db['transaction']
+					transaction_ids.append(transaction_id)
+			transactions_filter = {
+				'_id' : {
+					'$in' : transaction_ids
+				}#End of _id
+			}# End of transactions_filter
+			transactions_selected_attributes = {
+				'_id' : 1,
+				'fiscalStatus' : 1,
+				'uuid' : 1
+			}#End of transactions_selected_attributes
+			transactions_in_corebook_db = db_Transaction.find(transactions_filter,transactions_selected_attributes)
+			transactions_by_uuid = {}
+			for transaction_in_corebook_db in transactions_in_corebook_db:
+				if 'uuid' in transaction_in_corebook_db:
+					uuid = transaction_in_corebook_db['uuid'].upper()
+					transactions_by_uuid[uuid] = transaction_in_corebook_db
+			for cfdi_in_corebook_db in list(cfdis_in_corebook_db):
+				if 'uuid' in cfdi_in_corebook_db:
+					uuid = cfdi_in_corebook_db['uuid'].upper()
+					if uuid in transactions_by_uuid:
+						cfdi_transaction = transactions_by_uuid[uuid]
+						cfdi_in_corebook_db['status'] = _Constants.CANCELED_STATUS if cfdi_transaction['fiscalStatus'] is _Constants.CB_CANCELED_FISCAL_STATUS else _Constants.VALID_STATUS
+			# Join results in a dict:
 			cfdis_in_corebook_db_dict = {}
 			for cfdi_in_corebook_db in cfdis_in_corebook_db:
 				if 'uuid' in cfdi_in_corebook_db:
@@ -121,13 +156,22 @@ def get_cfdis_in_corebook_for_this_taxpayer_at_period(identifier,begin_date,end_
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
-def get_missing_cfdis_in_each_db(cfdis_in_forest_db,cfdis_in_corebook_db):
+def get_missing_cfdis_in_each_db(cfdis_in_forest_db,cfdis_in_corebook_db,logger=None):
 	try:
+		# Get missing CFDIs in Corebook:
+		cfdis_with_different_status_counter = 0
 		missing_cfdis_in_corebook_db = []
 		for uuid in cfdis_in_forest_db:
-			if not uuid in cfdis_in_corebook_db:
-				cfdi_in_forest = cfdis_in_forest_db[uuid]
+			cfdi_in_forest = cfdis_in_forest_db[uuid]
+			cfdi_in_forest_status = cfdi_in_forest['status']
+			if not uuid in cfdis_in_corebook_db:# If it is not in corebook:
 				missing_cfdis_in_corebook_db.append(cfdi_in_forest)
+			else:# If it is already in corebook but with diferent status:
+				cfdi_in_corebook = cfdis_in_corebook_db[uuid]
+				cfdi_in_corebook_status = cfdi_in_corebook['status']
+				if cfdi_in_corebook_status != cfdi_in_forest_status and cfdi_in_corebook_status == _Constants.VALID_STATUS:
+					cfdis_with_different_status_counter = cfdis_with_different_status_counter + 1
+					missing_cfdis_in_corebook_db.append(cfdi_in_forest)
 		# Get missing CFDIs in Forest:
 		missing_uuids_in_forest_db = []
 		for uuid in cfdis_in_corebook_db:
@@ -135,7 +179,8 @@ def get_missing_cfdis_in_each_db(cfdis_in_forest_db,cfdis_in_corebook_db):
 				missing_uuids_in_forest_db.append(uuid)
 		missing_cfdis = {
 			'in_corebook_db' : missing_cfdis_in_corebook_db,
-			'in_forest_db' : missing_uuids_in_forest_db
+			'in_forest_db' : missing_uuids_in_forest_db,
+			'cfdis_with_different_status' : cfdis_with_different_status_counter
 		}#End of missing_cfdis
 		return missing_cfdis
 	except Exception as e:
@@ -172,7 +217,7 @@ def store_missing_cfdis_in_corebook(missing_cfdis_in_corebook_db,identifier,logg
 				canceled = True
 			try:
 				logger.info(3*LOG_INDENT + str(n) + '. Storing ' + str(uuid) + ' in Corebook DB')
-				result = _Corebook_SDK.create_ticket_from_xml(xml,identifier,canceled=canceled,config=STORING_CONFIGURATION)
+				result = _Corebook_SDK.create_ticket_from_xml(xml,identifier,canceled=canceled,config=STORING_CONFIGURATION,logger=logger)
 				log['stored'] = log['stored'] + 1
 				s = s + 1
 			except Corebook_SDK_Error as corebook_SDK_Error:

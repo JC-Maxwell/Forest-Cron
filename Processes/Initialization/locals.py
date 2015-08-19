@@ -26,10 +26,6 @@ from pauli_sdk.Modules import helper as _Pauli_Helper
 from pauli_sdk.Classes.response import Error
 from pauli_sdk.Classes.response import Already_Handled_Exception
 
-# Corebook SDK:
-from corebook_sdk import corebook_sdk as _Corebook_SDK
-Corebook_SDK_Error = _Corebook_SDK.Error
-
 # Development:
 from General import constants as _Constants
 from General import utilities as _Utilities
