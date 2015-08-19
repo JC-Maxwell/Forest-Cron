@@ -71,7 +71,7 @@ def validate(process_name):
 		process_availability = _Utilities.check_process_availability(process_name)
 		if process_availability is not True:
 			cron_logger.info(LOG_INDENT + 'Process ' + process_name + ' is not available')
-			return False
+			return True
 		return True
 	except Already_Handled_Exception as already_handled_exception:
 		raise already_handled_exception
