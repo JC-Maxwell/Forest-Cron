@@ -44,8 +44,9 @@ LOG_INDENT = '    '
 # Firmware
 forest_1 = 'http://25.186.251.198/firmware'
 forest_2 = 'http://25.86.20.35/firmware'
+FOREST_URL = 'http://187.189.152.68:5001/firmware'
 
-FIRMWARE_URL = forest_1
+FIRMWARE_URL = FOREST_URL
 FIRMWARE_URL_INIT = forest_2
 FOREST_AZURE = 'http://forest-sat.cloudapp.net'
 
