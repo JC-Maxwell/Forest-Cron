@@ -21,6 +21,7 @@ import multiprocessing
 from datetime import datetime as Datetime
 from datetime import date as Date
 import signal
+import datetime
 
 # Pauli SDK dependency:
 from pauli_sdk.Modules import constants as _Pauli_Constants
@@ -37,6 +38,10 @@ SL1_LOGGING_CONFIG = _SL1_Config.synchronization_layer_1['logging']
 EQUALIZATION_LOGGING_CONFIG = _Equalization_Config.equalization['logging']
 # External:
 from pymongo import MongoClient 
+import telegram
+
+FOREST_BOT_TELEGRAM_TOKEN = _Constants.FOREST_BOT_TELEGRAM_TOKEN
+telegram_forest_bot = telegram.Bot(token=FOREST_BOT_TELEGRAM_TOKEN)
 
 # ======================================================== CODE
 
@@ -835,6 +840,34 @@ def set_timeout(func, args=(), kwargs={}, timeout_duration=5, default=None):
 	except Exception as exc:
 		result = default
 	return result
+
+def handle_forest_cron_error(error,logger=None):
+	try:
+		forest_db = set_connection_to_forest_db()
+		db_Process = forest_db['Process']
+		process = get_db_process('cron',logger=logger)
+		notified_problem = process['data']['notifications']['notified_problem'] if 'notified_problem' in process['data']['notifications'] else None
+		if notified_problem is None or notified_problem is not None and notified_problem['notified'] is not True:
+			if logger is not None:
+				logger.info('Notifiying problem')
+			people_to_notify_in_telegram = process['data']['notifications']['telegram']
+			for person_to_notify_in_telegram in people_to_notify_in_telegram:
+				chat_id = person_to_notify_in_telegram['chat_id']
+				telegram_forest_bot.sendMessage(chat_id=chat_id,text='Me caí')
+				telegram_forest_bot.sendMessage(chat_id=chat_id, text=telegram.Emoji.GRINNING_FACE_WITH_SMILING_EYES)
+			process['data']['notifications']['notified_problem'] = {
+				'message' : str(error),
+				'notified' : True,
+				'fixed' : False,
+				'date' : Datetime.now()
+			}# End of notified problem
+			db_Process.save(process)
+		else:
+			if logger is not None:
+				logger.info('Notification already sent')
+	except Exception as e:
+		if logger is not None:
+			logger.info(e)
 
 
 

@@ -104,8 +104,11 @@ def excute_initialization(taxpayers,shared_variables):# Taxpayers are the ones s
 			else:
 				initialization_execution_log['end'] = False
 			_Locals.log_initiliazation_thread_logs_at_initialization_main_logs(initialization_execution_log=initialization_execution_log,initialization_logger=initialization_logger,cron_logger=cron_logger)
-			process_logger.info(2*LOG_INDENT + 'Updating initialization data for taxpayer ... ')
-			_Locals.update_initialization_data_for_taxpayer(taxpayer,initialization_execution_log,logger=process_logger)
+			if 'avoid_iteration' in initialization_execution_data and initialization_execution_data['avoid_iteration'] == True:
+				process_logger.info(2*LOG_INDENT + 'NOT Updating initialization data for taxpayer ... ')
+			else:
+				process_logger.info(2*LOG_INDENT + 'Updating initialization data for taxpayer ... ')
+				_Locals.update_initialization_data_for_taxpayer(taxpayer,initialization_execution_log,logger=process_logger)
 			process_logger.info(2*LOG_INDENT + 'Synchronized successfully. Logged at SL1 main logs')
 		process_logger.info(INITIALIZATION_PROCESS_NAME + ' - ' + process_name.upper() + ' DONE SUCCESSFULLY \0/')
 		process_logger.info(_Constants.LOG_SEPARATOR)
@@ -147,7 +150,8 @@ def excute_initialization_for_taxpayer(taxpayer=None,process_logger=None):
 			# firmware_timeout = taxpayer['firmware_timeout'] if 'firmware_timeout' in taxpayer and taxpayer['firmware_timeout'] is not None else _Constants.DEFAULT_FIRMWARE_TIMEOUT
 			firmware_timeout = _Constants.DEFAULT_FIRMWARE_TIMEOUT
 			# -------------------------------------------------------------------
-			process_logger.info(2*LOG_INDENT + 'RETRIEVING DATA FROM FIRMWARE (SAT) constant timeout = ' + str(firmware_timeout) + ' secs')
+			# process_logger.info(2*LOG_INDENT + 'RETRIEVING DATA FROM FIRMWARE (SAT) constant timeout = ' + str(firmware_timeout) + ' secs')
+			process_logger.info(2*LOG_INDENT + 'RETRIEVING DATA FROM FIRMWARE (SAT)')
 			sat_updates = _Firmware.isa(instruction='get_sat_updates',params=get_sat_updates_params,log=initialization_log,logger=process_logger,timeout=firmware_timeout,taxpayer=taxpayer)
 			new_cfdis = sat_updates['new']
 			process_logger.info(3*LOG_INDENT + 'CFDI new:           ' + str(initialization_log['firmware']['new']))
@@ -167,7 +171,8 @@ def excute_initialization_for_taxpayer(taxpayer=None,process_logger=None):
 				'new' : initialization_log['firmware']['new'],
 				'stored' : initialization_log['forest_db']['after']['new'],
 				'year_initialized' : initialization_data['year'],
-				'month_initialized' : initialization_data['month']
+				'month_initialized' : initialization_data['month'],
+				'avoid_iteration' : initialization_log['avoid_iteration'] if 'avoid_iteration' in initialization_log else False
 			}# End of initialization_result
 		else:
 			initialization_result = {
@@ -178,10 +183,13 @@ def excute_initialization_for_taxpayer(taxpayer=None,process_logger=None):
 			}# End of initialization_result
 		# Update taxpayer:
 		new_initialization_data = initialization_data['new_initialization_data']
-		taxpayer = _Locals.update_taxpayer_initialization_status(taxpayer,new_initialization_data,logger=process_logger,initialized=initialized)
 		initialization_result['percentage_initialized'] = taxpayer['data']['percentage_initialized']
 		initialization_result['initialized'] = initialized
-		process_logger.info(3*LOG_INDENT + 'Percentage initialized:            ' + str(initialization_result['percentage_initialized']))
+		if 'avoid_iteration' in initialization_result and initialization_result['avoid_iteration'] == True:
+			process_logger.info(2*LOG_INDENT + 'NOT updating taxpayer initialization status ... ')
+		else:
+			taxpayer = _Locals.update_taxpayer_initialization_status(taxpayer,new_initialization_data,logger=process_logger,initialized=initialized)
+			process_logger.info(3*LOG_INDENT + 'Percentage initialized:            ' + str(initialization_result['percentage_initialized']))
 		return initialization_result
 	except Already_Handled_Exception as already_handled_exception:
 		raise already_handled_exception

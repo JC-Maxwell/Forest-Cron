@@ -35,14 +35,12 @@ LOG_INDENT = _Constants.LOG_INDENT
 
 # Firmware url:
 FIRMWARE_URL = _Constants.FIRMWARE_URL
-CALLING_FIRMWARE = '         Sending request to Forest-Firmware'
-AVOID_FIRMWARE = False
-DEFAULT_FIRMWARE_RESULT = {
-	'new' : [],
-	'updated' : []
-}# End of DEFAULT_FIRMWARE_RESULT
+AVOID_FIRMWARE = _Constants.AVOID_FIRMWARE
+DEFAULT_FIRMWARE_RESULT = _Constants.DEFAULT_FIRMWARE_RESULT
+FIRMWARE_STABLISH_CONNECTION_TIME_ON_SECONDS = _Constants.FIRMWARE_STABLISH_CONNECTION_TIME
+FIRMWARE_WAITING_TIME_ON_SECONDS = _Constants.FIRMWARE_WAITING_TIME_ON_SECONDS
 
-def callback(**params):
+def isa(**params):
 	try:
 		logger = None
 		if 'logger' in params:
@@ -56,7 +54,15 @@ def callback(**params):
 		payload = params
 		headers = {'content-type':'application/json'}
 		if AVOID_FIRMWARE is not True:
-			firmware_result = requests.post(url, data=json.dumps(payload), headers=headers)
+			try:
+				logger.info(3*LOG_INDENT + 'Requesting ' + url + ' ( ' + str(FIRMWARE_WAITING_TIME_ON_SECONDS) + ' secs ) ... ')
+				firmware_result = requests.post(url, data=json.dumps(payload), headers=headers,timeout=(FIRMWARE_STABLISH_CONNECTION_TIME_ON_SECONDS,FIRMWARE_WAITING_TIME_ON_SECONDS))# timeout = (connection,read)
+			except Exception as e:
+				logger.info(3*LOG_INDENT + 'Request to firmware was not possible (connection or timeout)')
+				logger.info(3*LOG_INDENT + 'Avoiding iteration ... ')
+				log['avoid_iteration'] = True# Just a flag to avoid taxpayer logs to be updated with this sync/init iteration (they must not be updated because there was a firmware problem)
+				_Utilities.handle_forest_cron_error(e,logger=logger)
+				return DEFAULT_FIRMWARE_RESULT
 			if firmware_result.status_code == 200:
 				firmware_result_json = firmware_result.json()# Comment in case of simulation
 				log['firmware']['new'] = len(firmware_result_json['new'])
@@ -77,12 +83,6 @@ def callback(**params):
 		# _Utilities.update_taxpayer_firmware_timeout(taxpayer,logger=logger)# firmware timeout updating was avoided
 		# -------------------------------------------------------------------
 		raise e
-
-def isa(**params):
-	timeout = params['timeout']
-	# Execute firmware with a timeout of n seconds
-	firmware_result_json = _Utilities.set_timeout(callback,kwargs=params,timeout_duration=timeout,default={ 'new' : [], 'updated' : [] })
-	return firmware_result_json
 	
 
 

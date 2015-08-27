@@ -22,6 +22,14 @@ THREADS_DIR = '/Threads'
 # Time Out:
 DEFAULT_FIRMWARE_TIMEOUT = 3600# One hour
 UPDATING_FIRMWARE_TIMEOUT_RATE = 1.5
+AVOID_FIRMWARE = False
+DEFAULT_FIRMWARE_RESULT = {
+	'new' : [],
+	'updated' : []
+}# End of DEFAULT_FIRMWARE_RESULT
+FIRMWARE_STABLISH_CONNECTION_TIME = 2# seconds (connection to firmware must be stablished in less than this seconds)
+FIRMWARE_WAITING_TIME = 2# hours (firmware response is gonna be waited for 2 hours no more)
+FIRMWARE_WAITING_TIME_ON_SECONDS = FIRMWARE_WAITING_TIME*3600
 
 # Logging
 LOGGING_LEVELS = {
@@ -79,4 +87,7 @@ STATUS_DATES = {
 # Other
 ZLATAN = '\\0/'
 LIMIT_LOGS_PER_TAXPAYER = 10
+
+# Telegram:
+FOREST_BOT_TELEGRAM_TOKEN = '97446605:AAG2fWjMMTwIriBLGnedhJgkB-_W-KeKoQ4'
 

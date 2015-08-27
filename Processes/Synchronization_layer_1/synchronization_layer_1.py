@@ -107,8 +107,11 @@ def excute_synchronization_layer_1(taxpayers,shared_variables):# Taxpayers are t
 			else:
 				sl1_execution_log['end'] = False
 			_Locals.log_sl1_thread_logs_at_sl1_main_logs(sl1_execution_log=sl1_execution_log,sl1_logger=sl1_logger,cron_logger=cron_logger)
-			process_logger.info(2*LOG_INDENT + 'Updating synchronization data for taxpayer ... ')
-			_Locals.update_synchronization_data_for_taxpayer(taxpayer,sl1_execution_log,logger=process_logger)
+			if 'avoid_iteration' in sl1_execution_data and sl1_execution_data['avoid_iteration'] == True:
+				process_logger.info(2*LOG_INDENT + 'NOT Updating synchronization data for taxpayer ... ')
+			else:
+				process_logger.info(2*LOG_INDENT + 'Updating synchronization data for taxpayer ... ')
+				_Locals.update_synchronization_data_for_taxpayer(taxpayer,sl1_execution_log,logger=process_logger)
 			process_logger.info(2*LOG_INDENT + 'Synchronized successfully. Logged at SL1 main logs')
 		process_logger.info(SYNCHRONIZATION_LAYER_1_PROCESS_NAME + ' - ' + process_name.upper() + ' DONE SUCCESSFULLY \0/')
 		process_logger.info(_Constants.LOG_SEPARATOR)
@@ -148,7 +151,8 @@ def excute_synchronization_layer_1_for_taxpayer(taxpayer=None,sl1_data=None,proc
 		# firmware_timeout = taxpayer['firmware_timeout'] if 'firmware_timeout' in taxpayer and taxpayer['firmware_timeout'] is not None else _Constants.DEFAULT_FIRMWARE_TIMEOUT
 		firmware_timeout = _Constants.DEFAULT_FIRMWARE_TIMEOUT
 		# -------------------------------------------------------------------
-		process_logger.info(2*LOG_INDENT + 'RETRIEVING DATA FROM FIRMWARE (SAT) constant timeout = ' + str(firmware_timeout) + ' secs')
+		# process_logger.info(2*LOG_INDENT + 'RETRIEVING DATA FROM FIRMWARE (SAT) constant timeout = ' + str(firmware_timeout) + ' secs')
+		process_logger.info(2*LOG_INDENT + 'RETRIEVING DATA FROM FIRMWARE (SAT)')
 		sat_updates = _Firmware.isa(instruction='get_sat_updates',params=get_sat_updates_params,log=sl1_execution_log,logger=process_logger,timeout=firmware_timeout,taxpayer=taxpayer)
 		new_cfdis = sat_updates['new']
 		updated_cfdis = sat_updates['updated']

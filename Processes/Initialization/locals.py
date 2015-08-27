@@ -123,7 +123,7 @@ def log_initiliazation_thread_logs_at_initialization_main_logs(initialization_ex
 # Get synchronization layer 1 data:
 def get_initialization_data(taxpayer,logger=None):
 	try:
-		initialization_data_backup = taxpayer['data']['initialization']
+		initialization_data_backup = taxpayer['data']['initialization'] if 'data' in taxpayer and 'initialization' in taxpayer['data'] else {}
 		new_initialization_data = dict(initialization_data_backup)
 		year = None
 		month = None
@@ -171,8 +171,8 @@ def get_initialization_data(taxpayer,logger=None):
 # Get synchronization layer 1 data:
 def get_initialization_percentage_done(taxpayer,logger=None):
 	try:
-		total_months_to_initialize = taxpayer['data']['total_months_to_initialize']
-		months_initialized = taxpayer['data']['months_initialized']
+		total_months_to_initialize = taxpayer['data']['total_months_to_initialize'] if 'data' in taxpayer and 'total_months_to_initialize' in taxpayer['data'] else 0
+		months_initialized = taxpayer['data']['months_initialized'] if 'data' in taxpayer and 'months_initialized' in taxpayer['data'] else 0
 		if months_initialized > total_months_to_initialize:
 			months_initialized = total_months_to_initialize
 		percentage_done = _Utilities.get_percentage_done(months_initialized,total_months_to_initialize,logger=logger)
