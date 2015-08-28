@@ -694,15 +694,21 @@ def check_process_availability(process_name,logger=None,db_Process=None):
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
-def update_cron_process_log(process_in_turn,logger=None,db_Process=None):
+def update_cron_process_log(process_in_turn,logger=None,db_Process=None,suspended_at=None):
 	try:
 		if db_Process is None:
 			forest_db = set_connection_to_forest_db()
 			db_Process = forest_db['Process']
 		process = get_db_process('cron',logger=logger)
-		process['last_triggered'] = Datetime.now()
-		process['process_in_turn'] = process_in_turn
-		db_Process.save(process)
+		if suspended_at is None:
+			del process['suspended_at']
+			process['last_triggered'] = Datetime.now()
+			process['process_in_turn'] = process_in_turn
+			db_Process.save(process)
+		else:
+			if not 'suspended_at' in process:
+				process['suspended_at'] = Datetime.now()
+				db_Process.save(process)
 	except Exception as e:
 		if logger is not None:
 			logger.critical(e.message)

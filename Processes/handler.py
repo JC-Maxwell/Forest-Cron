@@ -139,6 +139,13 @@ def execute(process):
 		start_time = time.time()
 		process_name = process['name']
 		process_params = process['params']
+		cron_logger.info(LOG_INDENT + 'Validating CRON Process')
+		process_availability = _Utilities.check_process_availability('cron')
+		if process_availability is not True:
+			cron_logger.info(LOG_INDENT + 'CRON is suspended')
+			suspended_at = Datetime.now()
+			_Utilities.update_cron_process_log('cron',logger=cron_logger,suspended_at=suspended_at)
+			return False
 		cron_logger.info(LOG_INDENT + 'Validating process ... ')
 		process_is_valid = validate(process_name)
 		cron_logger.info(LOG_INDENT + 'Updating cron db log ... ')
