@@ -701,7 +701,8 @@ def update_cron_process_log(process_in_turn,logger=None,db_Process=None,suspende
 			db_Process = forest_db['Process']
 		process = get_db_process('cron',logger=logger)
 		if suspended_at is None:
-			del process['suspended_at']
+			if 'suspended_at' in process:
+				del process['suspended_at']
 			process['last_triggered'] = Datetime.now()
 			process['process_in_turn'] = process_in_turn
 			db_Process.save(process)
