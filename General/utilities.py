@@ -349,9 +349,12 @@ def update_taxpayer_firmware_timeout(taxpayer,logger=None):
 		raise already_handled_exception
 
 # Retrieve all taxpayers that must be iterated in a specific process (i.e. syncrhonizing, initializing, updating and so on)
-def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=None,logger=None):
+def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=None,logger=None,debug_execution=False):
 	try:
 		process_name_filter = FILTERS_BY_PROCESS_NAMES[process_name]
+		if debug_execution is True:
+			logger.info(LOG_INDENT + 'Retrieving debug taxpayers for ' + process_name + ' process')
+			process_name_filter['debug'] = True
 		forest_db = set_connection_to_forest_db()
 		db_Taxpayer = forest_db['Taxpayer']
 		if limit is not None and from_taxpayer is None:
@@ -396,6 +399,8 @@ def create_new_taxpayer(db_taxpayer,logger=None):
 			'data' : db_taxpayer['data'] if 'data' in db_taxpayer else None,
 			'start_date' : db_taxpayer['start_date']
 		}#End of new_taxpayer
+		if 'debug' in db_taxpayer:
+			new_taxpayer['debug'] = db_taxpayer['debug']
 		return new_taxpayer
 	except Exception as e:
 		if logger is not None:
@@ -626,57 +631,66 @@ def new_process(process_name,logger=None,db_Process=None):
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
-def set_process_unavailable(process_name,taxpayers=[],logger=None,db_Process=None):
+def set_process_unavailable(process_name,taxpayers=[],logger=None,db_Process=None,debug_execution=False):
 	try:
 		if db_Process is None:
 			forest_db = set_connection_to_forest_db()
 			db_Process = forest_db['Process']
 		process = get_db_process(process_name,logger=logger)
-		process['last_triggered'] = Datetime.now()
-		process['available'] = False
+		if debug_execution is not True:# These attributes are updated just if it is not a debug execution
+			process['last_triggered'] = Datetime.now()
+			process['available'] = False
 		process['total_taxpayers'] = len(taxpayers)
 		process['percentage_done'] = '0.00%'
 		db_Process.save(process)
-		return process['available']
+		if debug_execution:
+			process_availability = False# Just to seem it was set unavailable
+		else:
+			process_availability = process['available']
+		return process_availability
 	except Exception as e:
 		# sl1_logger.critical(e.message)
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
-def set_process_available(process_name,process_duration=0,logger=None,db_Process=None,log_process_duration=False):
+def set_process_available(process_name,process_duration=0,logger=None,db_Process=None,log_process_duration=False,debug_execution=False):
 	try:
-		if db_Process is None:
-			forest_db = set_connection_to_forest_db()
-			db_Process = forest_db['Process']
-		process = get_db_process(process_name,logger=logger)
-		process['last_completed'] = Datetime.now()
-		if log_process_duration is True:
-			executions_counter = process['executions_counter'] if 'executions_counter' in process else 0
-			average_duration = process['average_duration'] if 'average_duration' in process else 0
-			total_of_durations = average_duration*executions_counter
-			new_total_of_durations = total_of_durations + process_duration
-			process['executions_counter'] = executions_counter + 1
-			process['average_duration'] = new_total_of_durations/process['executions_counter']
-		process['available'] = True
-		if 'current_taxpayer' in process:
-			del process['current_taxpayer'] 
-		if 'current_taxpayer_index' in process:
-			del process['current_taxpayer_index']
-		if 'current_taxpayer_triggered' in process:
-			del process['current_taxpayer_triggered']
-		if 'total_taxpayers' in process:
-			del process['total_taxpayers']
-		if 'percentage_done' in process:
-			del process['percentage_done']
-		db_Process.save(process)
+		if debug_execution is not True:
+			if db_Process is None:
+				forest_db = set_connection_to_forest_db()
+				db_Process = forest_db['Process']
+			process = get_db_process(process_name,logger=logger)
+			process['last_completed'] = Datetime.now()
+			if log_process_duration is True:
+				executions_counter = process['executions_counter'] if 'executions_counter' in process else 0
+				average_duration = process['average_duration'] if 'average_duration' in process else 0
+				total_of_durations = average_duration*executions_counter
+				new_total_of_durations = total_of_durations + process_duration
+				process['executions_counter'] = executions_counter + 1
+				process['average_duration'] = new_total_of_durations/process['executions_counter']
+			process['available'] = True
+			if 'current_taxpayer' in process:
+				del process['current_taxpayer'] 
+			if 'current_taxpayer_index' in process:
+				del process['current_taxpayer_index']
+			if 'current_taxpayer_triggered' in process:
+				del process['current_taxpayer_triggered']
+			if 'total_taxpayers' in process:
+				del process['total_taxpayers']
+			if 'percentage_done' in process:
+				del process['percentage_done']
+			db_Process.save(process)
 	except Exception as e:
 		if logger is not None:
 			logger.critical(e.message)
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
-def check_process_availability(process_name,logger=None,db_Process=None):
+def check_process_availability(process_name,logger=None,db_Process=None,debug_execution=False):
 	try:
+		available = True
+		if debug_execution is True:
+			return available
 		if db_Process is None:
 			forest_db = set_connection_to_forest_db()
 			db_Process = forest_db['Process']
@@ -694,20 +708,20 @@ def check_process_availability(process_name,logger=None,db_Process=None):
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
-def update_cron_process_log(process_in_turn,logger=None,db_Process=None,suspended_at=None):
+def update_cron_process_log(process_in_turn,logger=None,db_Process=None,suspended_at=None,debug_execution=False):
 	try:
-		if db_Process is None:
-			forest_db = set_connection_to_forest_db()
-			db_Process = forest_db['Process']
-		process = get_db_process('cron',logger=logger)
-		if suspended_at is None:
-			if 'suspended_at' in process:
-				del process['suspended_at']
-			process['last_triggered'] = Datetime.now()
-			process['process_in_turn'] = process_in_turn
-			db_Process.save(process)
-		else:
-			if not 'suspended_at' in process:
+		if debug_execution is False:
+			if db_Process is None:
+				forest_db = set_connection_to_forest_db()
+				db_Process = forest_db['Process']
+			process = get_db_process('cron',logger=logger)
+			if suspended_at is None:
+				if 'suspended_at' in process:
+					del process['suspended_at']
+				process['last_triggered'] = Datetime.now()
+				process['process_in_turn'] = process_in_turn
+				db_Process.save(process)
+			elif not 'suspended_at' in process:
 				process['suspended_at'] = Datetime.now()
 				db_Process.save(process)
 	except Exception as e:
@@ -860,8 +874,13 @@ def handle_forest_cron_error(error,logger=None):
 			people_to_notify_in_telegram = process['data']['notifications']['telegram']
 			for person_to_notify_in_telegram in people_to_notify_in_telegram:
 				chat_id = person_to_notify_in_telegram['chat_id']
+				person_notified_name = person_to_notify_in_telegram['name']
+				logger.info(' -> ' + str(person_notified_name))
 				telegram_forest_bot.sendMessage(chat_id=chat_id,text='Me caí')
 				telegram_forest_bot.sendMessage(chat_id=chat_id, text=telegram.Emoji.GRINNING_FACE_WITH_SMILING_EYES)
+				telegram_forest_bot.sendMessage(chat_id=chat_id,text='No sé que me pasa por que sin querer mando')
+				telegram_forest_bot.sendMessage(chat_id=chat_id,text=str(error))
+				telegram_forest_bot.sendMessage(chat_id=chat_id,text='Me puedes dar una checada?')
 			process['data']['notifications']['notified_problem'] = {
 				'message' : str(error),
 				'notified' : True,
@@ -875,6 +894,29 @@ def handle_forest_cron_error(error,logger=None):
 	except Exception as e:
 		if logger is not None:
 			logger.info(e)
+
+def handle_forest_cron_success(success,logger=None):
+	try:
+		forest_db = set_connection_to_forest_db()
+		db_Process = forest_db['Process']
+		process = get_db_process('cron',logger=logger)
+		notified_problem = process['data']['notifications']['notified_problem'] if 'notified_problem' in process['data']['notifications'] else None
+		if notified_problem is True:
+			if logger is not None:
+				logger.info('Notifiying success')
+			people_to_notify_in_telegram = process['data']['notifications']['telegram']
+			for person_to_notify_in_telegram in people_to_notify_in_telegram:
+				chat_id = person_to_notify_in_telegram['chat_id']
+				person_notified_name = person_to_notify_in_telegram['name']
+				logger.info(' -> ' + str(person_notified_name))
+				telegram_forest_bot.sendMessage(chat_id=chat_id,text='Ya está todo en orden')
+				telegram_forest_bot.sendMessage(chat_id=chat_id,text='Gracias carnal! :)')
+			del process['data']['notifications']['notified_problem']
+			db_Process.save(process)
+	except Exception as e:
+		if logger is not None:
+			logger.info(e)
+
 
 
 

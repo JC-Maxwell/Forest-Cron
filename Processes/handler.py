@@ -53,7 +53,7 @@ PROCESS_HANDLER_CONFIG = _Processes_Config.process_handler
 
 # Descriptions: functions to validate Forest-Cron calling data, availability an so on
 
-def validate(process_name):
+def validate(process_name,debug_execution=False):
 	try:
 		validated = True
 		# Forest-Croning functione existance:
@@ -67,6 +67,8 @@ def validate(process_name):
 				cron_logger.info(LOG_INDENT + 'Invalid process name ' + process_name)
 				return False
 		# Process availability:
+		if debug_execution is True:
+			return validated
 		cron_logger.info(2*LOG_INDENT + 'Checking ' + process_name + ' availability ... ')
 		process_availability = _Utilities.check_process_availability(process_name)
 		if process_availability is not True:
@@ -139,18 +141,19 @@ def execute(process):
 		start_time = time.time()
 		process_name = process['name']
 		process_params = process['params']
+		debug_execution = process['debug']
 		cron_logger.info(LOG_INDENT + 'Validating CRON Process')
-		process_availability = _Utilities.check_process_availability('cron')
+		process_availability = _Utilities.check_process_availability('cron',debug_execution=debug_execution)
 		if process_availability is not True:
 			cron_logger.info(LOG_INDENT + 'CRON is suspended')
 			suspended_at = Datetime.now()
-			_Utilities.update_cron_process_log('cron',logger=cron_logger,suspended_at=suspended_at)
+			_Utilities.update_cron_process_log('cron',logger=cron_logger,suspended_at=suspended_at,debug_execution=debug_execution)
 			return False
 		cron_logger.info(LOG_INDENT + 'Validating process ... ')
-		process_is_valid = validate(process_name)
-		cron_logger.info(LOG_INDENT + 'Updating cron db log ... ')
-		_Utilities.update_cron_process_log(process_name,logger=cron_logger)
+		process_is_valid = validate(process_name,debug_execution=debug_execution)
 		if process_is_valid:
+			cron_logger.info(LOG_INDENT + 'Updating cron db log ... ')
+			_Utilities.update_cron_process_log(process_name,logger=cron_logger,debug_execution=debug_execution)
 			cron_logger.info(LOG_INDENT + 'Getting instance of ' + process_name)
 			# Process data:
 			SPECIFIC_PROCESS_CONFIG_DATA = PROCESS_HANDLER_CONFIG[process_name]
@@ -166,7 +169,9 @@ def execute(process):
 			cron_logger.info(LOG_INDENT + 'Getting process ' + process_name + ' at db')
 			process = _Utilities.get_db_process(process_name)
 			from_taxpayer = None
-			if 'current_taxpayer' in process:
+			if debug_execution is True:
+				cron_logger.info(LOG_INDENT + 'This process will run in debugging mode')
+			elif 'current_taxpayer' in process:
 				from_taxpayer = process['current_taxpayer']# If process fails or if it is stopped it will start from this taxpayer
 				cron_logger.info(LOG_INDENT + 'This process will run from taxpayer ' + from_taxpayer)
 			else:
@@ -174,13 +179,14 @@ def execute(process):
 			# Update default log
 			default_log = _Utilities.add_defalut_data_to_default_log(default_log)
 			# Logging:
-			cron_logger.info(LOG_INDENT + 'Logging calling at cron procesess ... ')
-			_Utilities.log_at_cron_processes(process)		
+			if debug_execution is not True:
+				cron_logger.info(LOG_INDENT + 'Logging calling at cron procesess ... ')
+				_Utilities.log_at_cron_processes(process)		
 			cron_logger.info(LOG_INDENT + 'Getting taxpayers for this process ... ')
-			taxpayers = _Utilities.get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=from_taxpayer,logger=cron_logger)
+			taxpayers = _Utilities.get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=from_taxpayer,logger=cron_logger,debug_execution=debug_execution)
 			# Set unavailable:
 			cron_logger.info(LOG_INDENT + 'Setting process ' + process_name + ' unavailable')
-			process_availability = _Utilities.set_process_unavailable(process_name,taxpayers=taxpayers,logger=cron_logger)
+			process_availability = _Utilities.set_process_unavailable(process_name,taxpayers=taxpayers,logger=cron_logger,debug_execution=debug_execution)
 			cron_logger.info(LOG_INDENT + process_name + ' availability: ' + str(process_availability))
 			# Multi-threading execution:
 			cron_logger.info(LOG_INDENT + 'Executing ... ')
@@ -194,7 +200,7 @@ def execute(process):
 			log_process_duration = False
 			if len(taxpayers) > 0:
 				log_process_duration = True
-			_Utilities.set_process_available(process_name,process_duration=process_duration,logger=cron_logger,log_process_duration=log_process_duration)
+			_Utilities.set_process_available(process_name,process_duration=process_duration,logger=cron_logger,log_process_duration=log_process_duration,debug_execution=debug_execution)
 		else:
 			cron_logger.info(LOG_INDENT + 'End of execution')
 	except Already_Handled_Exception as already_handled_exception:

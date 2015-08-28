@@ -64,9 +64,8 @@ SL1_LOGGING_CONFIG = _SL1_Config.synchronization_layer_1['logging']
 EQUALIZATION_LOGGING_CONFIG = _Equalization_Config.equalization['logging']
 INITIALIZATION_LOGGING_CONFIG = _Initialization_config.initialization['logging']
 GENERAL_LOGGING_CONFIG = _Config.general['logging']
-
-
 LOG_INDENT = _Constants.LOG_INDENT
+debug_execution = False
 
 # Initiliaze all project logs for this execution:
 def set_all_loggers():
@@ -87,11 +86,12 @@ def set_all_loggers():
 # Get params (i.e. params given at command line execution)
 def get_command_line_params(argv):
 	try:
+		global debug_execution
 		process_name = ''
 		process_params = {}
 		try:
 			cron_logger.debug(' - Getting options ... ')
-			opts, args = getopt.getopt(argv,"hn:p:",["process_name=","process_params="])
+			opts, args = getopt.getopt(argv,"hn:p:d",["process_name=","process_params=","debug="])
 		except Exception as e:
 			error_message = e.message
 			print error_message
@@ -110,11 +110,15 @@ def get_command_line_params(argv):
 			elif opt in ("-p", "--process_params"):
 				cron_logger.debug(' - process_params option found ... ')
 				process_params = json.loads(arg)
+			elif opt in ("-d", "--debug"):
+				cron_logger.debug(' - debug option found ... ')
+				debug_execution = True
 		if process_name != '':
 			cron_logger.debug(' - Building process ... ')
 			process = {
 				'name' : process_name,
-				'params' : process_params
+				'params' : process_params,
+				'debug' : debug_execution
 			}#End of process
 			return process
 		else:
@@ -140,6 +144,8 @@ def main(argv):
 		cron_logger.info('FOREST-CRON PROCESS CALLED')
 		cron_logger.info(LOG_INDENT + 'Getting command line params ... ')
 		process = get_command_line_params(argv)
+		if 'debug' in process:
+			cron_logger.info(LOG_INDENT + 'Running in debug mode ... ')
 		cron_logger.info(LOG_INDENT + 'Calling process handler ... ')
 		_Processes_Handler.execute(process)
 	except Already_Handled_Exception as already_handled_exception:
@@ -166,3 +172,9 @@ if __name__ == '__main__':
 	}#End of process_params
 	# Exectuion:
 	main(sys.argv[1:])
+
+
+
+
+
+
