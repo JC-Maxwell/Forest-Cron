@@ -129,10 +129,10 @@ def equalize_dbs_for_a_taxpayer(taxpayer=None,process_logger=None):
 		}# End of log
 		# Get params:
 		identifier = taxpayer['identifier']
-		# begin_date = taxpayer['start_date']#Since taxpayer claim to be synchronized
-		year =  str(Datetime.now().year)
-		months = _Utilities.get_current_fiscal_declaration_period(_Constants.TWO_MONTHS_PERIOD)
-		begin_date = Datetime(int(year),int(months[0]),1)# Since previous month (optimization introduced on Sep 8, 2015)
+		begin_date = taxpayer['start_date']#Since taxpayer claim to be synchronized
+		# year =  str(Datetime.now().year)
+		# months = _Utilities.get_current_fiscal_declaration_period(_Constants.TWO_MONTHS_PERIOD)
+		# begin_date = Datetime(int(year),int(months[0]),1)# Since previous month (optimization introduced on Sep 8, 2015)
 		begin_date = begin_date.replace(hour=0, minute=0)
 		end_date = Datetime.now()# Until now
 		process_logger.info(2*LOG_INDENT + 'Equalizing dbs from ' + str(begin_date) + ' to ' + str(end_date))
