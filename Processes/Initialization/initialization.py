@@ -183,12 +183,13 @@ def excute_initialization_for_taxpayer(taxpayer=None,process_logger=None):
 			}# End of initialization_result
 		# Update taxpayer:
 		new_initialization_data = initialization_data['new_initialization_data']
-		initialization_result['percentage_initialized'] = taxpayer['data']['percentage_initialized']
 		initialization_result['initialized'] = initialized
 		if 'avoid_iteration' in initialization_result and initialization_result['avoid_iteration'] == True:
 			process_logger.info(2*LOG_INDENT + 'NOT updating taxpayer initialization status ... ')
+			initialization_result['percentage_initialized'] = "--.-%"
 		else:
 			taxpayer = _Locals.update_taxpayer_initialization_status(taxpayer,new_initialization_data,logger=process_logger,initialized=initialized)
+			initialization_result['percentage_initialized'] = taxpayer['data']['percentage_initialized']
 			process_logger.info(3*LOG_INDENT + 'Percentage initialized:            ' + str(initialization_result['percentage_initialized']))
 		return initialization_result
 	except Already_Handled_Exception as already_handled_exception:

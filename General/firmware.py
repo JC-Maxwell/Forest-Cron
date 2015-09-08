@@ -51,7 +51,6 @@ def isa(**params):
 		del params['log']
 		payload = params
 		headers = {'content-type':'application/json'}
-		# AVOID_FIRMWARE = True
 		if AVOID_FIRMWARE is not True:
 			try:				
 				instruction = params['instruction']
