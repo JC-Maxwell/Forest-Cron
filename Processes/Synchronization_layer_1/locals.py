@@ -226,13 +226,18 @@ def create_cfdi(new_cfdi,logger=None,sl1_execution_log=None):
 			'buyer': new_cfdi['buyer'],
 			'seller': new_cfdi['seller'],
 			'status': new_cfdi['status'],
-			'certification_date': _Utilities.sat_date_to_ISODate(new_cfdi['certification_date']),
-			'issued_date': _Utilities.sat_date_to_ISODate(new_cfdi['issued_date']),
 			'voucher_effect' : new_cfdi['voucher_effect'] if 'voucher_effect' in new_cfdi else None
 		}#End of db_ne_cfdi
+		if 'simulated' in new_cfdi and new_cfdi['simulated'] == True:
+			db_new_cfdi['certification_date'] = new_cfdi['certification_date']# It comes from db -- date is already parsed -- 
+			db_new_cfdi['issued_date'] = new_cfdi['issued_date']
+		else:
+			db_new_cfdi['certification_date'] = _Utilities.sat_date_to_ISODate(new_cfdi['certification_date'])
+			db_new_cfdi['issued_date'] = _Utilities.sat_date_to_ISODate(new_cfdi['issued_date'])
 		# Get xml data:
 		xml = new_cfdi['xml']
 		if xml is not None:
+			cfdi_type = _Utilities.get_cfdi_type(xml,logger=logger)
 			validation = _Pauli_Helper.validate_xml(xml)
 			xml_warnings = validation['warnings']
 			xml_invalidations = validation['invalidations']
@@ -242,6 +247,7 @@ def create_cfdi(new_cfdi,logger=None,sl1_execution_log=None):
 				'invalidations' : xml_invalidations,
 				'warnings' : xml_warnings
 			}#End of details
+			db_new_cfdi['cfdi_type'] = cfdi_type# It says if cfdi is a credit_note, payroll or normal
 			sl1_execution_log['forest_db']['after']['new'] = sl1_execution_log['forest_db']['after']['new'] + 1
 		elif new_cfdi['status'] == _Constants.CANCELED_STATUS:
 			db_new_cfdi['xml'] = _Helper.build_default_xml(db_new_cfdi['seller'],db_new_cfdi['buyer'],db_new_cfdi['certification_date'],db_new_cfdi['issued_date'],db_new_cfdi['voucher_effect'],db_new_cfdi['uuid'])

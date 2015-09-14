@@ -450,6 +450,7 @@ def create_cfdi(new_cfdi,logger=None,log=None):
 		# Get xml data:
 		xml = new_cfdi['xml']
 		if xml is not None:
+			cfdi_type = get_cfdi_type(xml,logger=logger)
 			validation = _Pauli_Helper.validate_xml(xml)
 			xml_warnings = validation['warnings']
 			xml_invalidations = validation['invalidations']
@@ -459,6 +460,7 @@ def create_cfdi(new_cfdi,logger=None,log=None):
 				'invalidations' : xml_invalidations,
 				'warnings' : xml_warnings
 			}#End of details
+			db_new_cfdi['cfdi_type'] = cfdi_type# It says if cfdi is a credit_note, payroll or normal
 			log['forest_db']['after']['new'] = log['forest_db']['after']['new'] + 1
 		elif new_cfdi['status'] == _Constants.CANCELED_STATUS:
 			db_new_cfdi['xml'] = _Helper.build_default_xml(db_new_cfdi['seller'],db_new_cfdi['buyer'],db_new_cfdi['certification_date'],db_new_cfdi['issued_date'],db_new_cfdi['voucher_effect'],db_new_cfdi['uuid'])
@@ -568,6 +570,43 @@ def get_pending_cfdis_in_forest_for_this_taxpayer_at_period(taxpayer,begin_date,
 	except Exception as e:
 		# sl1_logger.critical(e.message)
 		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception
+
+# Return whether xml (CFDI) is a normal CFDI, payroll or credit note:
+def get_cfdi_type(cfdi_xml,logger=None):
+	try:
+		cfdi_type = ''
+		xml_element = _Pauli_Helper.get_xml_element_from_xml(cfdi_xml)
+		xml_element_attributes = xml_element.attrib
+		payroll = is_a_payroll(xml_element,logger=logger)# return boolean
+		voucher_effect = xml_element_attributes['tipoDeComprobante']
+		if payroll:
+			cfdi_type = _Constants.PAYROLL_CFDI_TYPE
+		elif not payroll and voucher_effect == _Constants.EXPENSE_VOUCHER_EFFECT:
+			cfdi_type = _Constants.CREDIT_NOTE_CFDI_TYPE
+		else: 
+			cfdi_type = _Constants.NORMAL_CFDI_TYPE
+		print 'Type: ' + str(cfdi_type)
+		return cfdi_type
+	except Exception as e:
+		if logger is not None:
+			logger.info(e)
+
+def is_a_payroll(xml_element,execution_data=None,logger=None):
+	try:
+		is_a_payroll = False
+		payroll_element = _Pauli_Helper.get_specific_element_from_a_xml_element(xml_element,'nomina')
+		if payroll_element is not None:
+			is_a_payroll = True
+		return is_a_payroll
+	except Already_Handled_Exception as already_handled_exception:
+		raise already_handled_exception
+	except:
+		other_exception = str(sys.exc_info()[1])
+		other_error = Error(_Pauli_Constants.HTTP_CODES['INTERNAL'],_Pauli_Constants.ERROR_MESSAGES['INTERNAL'])
+		if logger is not None:
+			logger.critical(other_error.content + other_exception)
+		already_handled_exception = Already_Handled_Exception(other_error)
 		raise already_handled_exception
 
 # ______                                               
@@ -916,6 +955,12 @@ def handle_forest_cron_success(success,logger=None):
 	except Exception as e:
 		if logger is not None:
 			logger.info(e)
+
+
+
+
+
+	
 
 
 

@@ -91,3 +91,22 @@ LIMIT_LOGS_PER_TAXPAYER = 10
 # Telegram:
 FOREST_BOT_TELEGRAM_TOKEN = '97446605:AAG2fWjMMTwIriBLGnedhJgkB-_W-KeKoQ4'
 
+# XML contants:
+EXPENSE_VOUCHER_EFFECT = 'egreso'
+INCOME_VOUCHER_EFFECT = 'ingreso'
+TRANSFERRED_VOUCHER_EFFECT = 'traslado'
+
+# CFDI_types
+CREDIT_NOTE_CFDI_TYPE = 'credit_note'
+PAYROLL_CFDI_TYPE = 'payroll'
+NORMAL_CFDI_TYPE = 'normal'
+
+
+
+
+
+
+
+
+
+

@@ -28,9 +28,6 @@ from pauli_sdk.Classes.response import Already_Handled_Exception
 from General import constants as _Constants
 from General import utilities as _Utilities
 
-# Firmware:
-from forest_firmware.isa import instructions as ISA
-
 # ======================================================== MODULE CODE
 
 LOG_INDENT = _Constants.LOG_INDENT
@@ -38,6 +35,45 @@ AVOID_FIRMWARE = _Constants.AVOID_FIRMWARE
 DEFAULT_FIRMWARE_RESULT = _Constants.DEFAULT_FIRMWARE_RESULT
 FIRMWARE_STABLISH_CONNECTION_TIME_ON_SECONDS = _Constants.FIRMWARE_STABLISH_CONNECTION_TIME
 FIRMWARE_WAITING_TIME_ON_SECONDS = _Constants.FIRMWARE_WAITING_TIME_ON_SECONDS
+
+# Firmware (comment this to simulate firmware):
+from forest_firmware.isa import instructions as ISA
+# Firmware simulation (uncomment this to simulate firmware
+# --------------------- BEGIN OF FIRMWARE SIMULATION ---------------------
+# Just a firmware simulation for debugging:
+# def get_sat_updates(params,logger=None):
+# 	try:
+# 		logger.info(3*LOG_INDENT + ' -> Simulating Firmware.ISA ... ')
+# 		forest_db = _Utilities.set_connection_to_forest_db()
+# 		db_CFDI = forest_db['CFDI']
+# 		# This query is to retrieve CFDIs from forest (just specify the query as you wish)
+# 		simulated_cfdis = db_CFDI.find({ 
+# 			'uuid' : { 
+# 				'$in' : [
+# 					'83000FEA-35C7-4CCB-9136-45F8FF7D90C6',# credit note
+# 					'3A58597F-E0A3-474A-8299-E34E9DBFFE68',# payroll
+# 					'E254BDBC-9F6A-4056-85AF-0557FD20391C'# normal
+# 				]# End of in 
+# 			}# End of uuid
+# 		})# End simulated_cfdis
+# 		simulated_cfdis_list = []
+# 		for simulated_cfdi in simulated_cfdis:
+# 			simulated_cfdi['simulated'] = True
+# 			simulated_cfdis_list.append(simulated_cfdi)
+# 		logger.info(3*LOG_INDENT + ' -> Simulated CFDIs: ' + str(len(simulated_cfdis_list)))
+# 		firmware_result_json = {
+# 			'new' : simulated_cfdis_list,
+# 			'updated' : []
+# 		}#End of firmware_result_json
+# 		return firmware_result_json
+# 	except Exception as e:
+# 		logger.info(3*LOG_INDENT + str(e))
+
+# ISA = {
+# 	'get_sat_updates' : get_sat_updates,
+# 	'simulation' : True
+# }# End of ISA simulation
+# --------------------- END OF FIRMWARE SIMULATION ---------------------
 
 def isa(**params):
 	try:
@@ -56,8 +92,13 @@ def isa(**params):
 				instruction = params['instruction']
 				isa_params = params['params']
 				logger.info(3*LOG_INDENT + 'Consuming Firmware.ISA ')
-				firmware_result = ISA[instruction](isa_params)
-				firmware_result_json = firmware_result.content
+				# Verify if it is not a firmware simulation:
+				if 'simulation' in ISA and ISA['simulation'] == True:
+					firmware_result_json = ISA[instruction](isa_params,logger=logger)
+				# Really consumes firmware:
+				else:
+					firmware_result = ISA[instruction](isa_params)
+					firmware_result_json = firmware_result.content
 				log['firmware']['new'] = len(firmware_result_json['new'])
 				log['firmware']['update'] = len(firmware_result_json['updated'])
 				_Utilities.handle_forest_cron_success('ok',logger=logger)
@@ -80,6 +121,19 @@ def isa(**params):
 		# _Utilities.update_taxpayer_firmware_timeout(taxpayer,logger=logger)# firmware timeout updating was avoided
 		# -------------------------------------------------------------------
 		raise e
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
