@@ -461,6 +461,19 @@ def create_cfdi(new_cfdi,logger=None,log=None):
 				'warnings' : xml_warnings
 			}#End of details
 			db_new_cfdi['cfdi_type'] = cfdi_type# It says if cfdi is a credit_note, payroll or normal
+			currency = _Pauli_Helper.get_currency(xml,logger=logger)
+			if currency is not None:
+				db_new_cfdi['currency'] = currency
+			else:
+				db_new_cfdi['currency'] = 'mxn'# Default
+			taxes_included = _Pauli_Helper.get_taxes_included_in_this_CFDI(xml,logger=logger)
+			db_new_cfdi['_wl_ish'] = taxes_included['_wl_ish'] if taxes_included['_wl_ish'] is not None else False
+			db_new_cfdi['_t_iva_16'] = taxes_included['_t_iva_16'] if taxes_included['_t_iva_16'] is not None else False
+			db_new_cfdi['_t_iva_0'] = taxes_included['_t_iva_0'] if taxes_included['_t_iva_0'] is not None else False
+			db_new_cfdi['_w_iva_10'] = taxes_included['_w_iva_10'] if taxes_included['_w_iva_10'] is not None else False
+			db_new_cfdi['_w_isr'] = taxes_included['_w_isr'] if taxes_included['_w_isr'] is not None else False
+			db_new_cfdi['_tl_ish'] = taxes_included['_tl_ish'] if taxes_included['_tl_ish'] is not None else False
+			db_new_cfdi['_t_ieps'] = taxes_included['_t_ieps'] if taxes_included['_t_ieps'] is not None else False
 			log['forest_db']['after']['new'] = log['forest_db']['after']['new'] + 1
 		elif new_cfdi['status'] == _Constants.CANCELED_STATUS:
 			db_new_cfdi['xml'] = _Helper.build_default_xml(db_new_cfdi['seller'],db_new_cfdi['buyer'],db_new_cfdi['certification_date'],db_new_cfdi['issued_date'],db_new_cfdi['voucher_effect'],db_new_cfdi['uuid'])
@@ -584,6 +597,8 @@ def get_cfdi_type(cfdi_xml,logger=None):
 			cfdi_type = _Constants.PAYROLL_CFDI_TYPE
 		elif not payroll and voucher_effect == _Constants.EXPENSE_VOUCHER_EFFECT:
 			cfdi_type = _Constants.CREDIT_NOTE_CFDI_TYPE
+		elif not payroll and voucher_effect == _Constants.TRANSFERRED_VOUCHER_EFFECT:
+			cfdi_type = _Constants.TRANSPORT_DOCUMENT_CFDI_TYPE
 		else: 
 			cfdi_type = _Constants.NORMAL_CFDI_TYPE
 		print 'Type: ' + str(cfdi_type)

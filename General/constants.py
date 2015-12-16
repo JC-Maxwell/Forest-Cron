@@ -98,6 +98,7 @@ TRANSFERRED_VOUCHER_EFFECT = 'traslado'
 
 # CFDI_types
 CREDIT_NOTE_CFDI_TYPE = 'credit_note'
+TRANSPORT_DOCUMENT_CFDI_TYPE = 'transport_document'
 PAYROLL_CFDI_TYPE = 'payroll'
 NORMAL_CFDI_TYPE = 'normal'
 
