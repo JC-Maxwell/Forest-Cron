@@ -236,7 +236,7 @@ def create_cfdi(new_cfdi,logger=None,sl1_execution_log=None):
 			db_new_cfdi['issued_date'] = _Utilities.sat_date_to_ISODate(new_cfdi['issued_date'])
 		# Get xml data:
 		xml = new_cfdi['xml']
-		if xml is not None:
+		if xml is not None and xml != '':#bug_solved, xml was '' and it causes errors in cfdi_type, currency and taxes
 			cfdi_type = _Utilities.get_cfdi_type(xml,logger=logger)
 			validation = _Pauli_Helper.validate_xml(xml)
 			xml_warnings = validation['warnings']
@@ -263,7 +263,7 @@ def create_cfdi(new_cfdi,logger=None,sl1_execution_log=None):
 			db_new_cfdi['_t_ieps'] = taxes_included['_t_ieps'] if taxes_included['_t_ieps'] is not None else False
 			sl1_execution_log['forest_db']['after']['new'] = sl1_execution_log['forest_db']['after']['new'] + 1
 		elif new_cfdi['status'] == _Constants.CANCELED_STATUS:
-			db_new_cfdi['xml'] = _Helper.build_default_xml(db_new_cfdi['seller'],db_new_cfdi['buyer'],db_new_cfdi['certification_date'],db_new_cfdi['issued_date'],db_new_cfdi['voucher_effect'],db_new_cfdi['uuid'])
+			# db_new_cfdi['xml'] = _Helper.build_default_xml(db_new_cfdi['seller'],db_new_cfdi['buyer'],db_new_cfdi['certification_date'],db_new_cfdi['issued_date'],db_new_cfdi['voucher_effect'],db_new_cfdi['uuid'])
 			sl1_execution_log['forest_db']['after']['new'] = sl1_execution_log['forest_db']['after']['new'] + 1
 		else:
 			sl1_execution_log['forest_db']['after']['pending'] = sl1_execution_log['forest_db']['after']['pending'] + 1

@@ -170,7 +170,7 @@ def excute_synchronization_layer_1_for_taxpayer(taxpayer=None,sl1_data=None,proc
 					_Locals.set_xml_to_pending_cfdi(cfdi_with_missing_xml,logger=process_logger,sl1_execution_log=sl1_execution_log)
 					process_logger.info(3*LOG_INDENT + str(n) + '. ' + uuid + ' completed in Forest DB')
 			else:# Completely new ones:
-				_Locals.create_cfdi(new_cfdi,logger=process_logger,sl1_execution_log=sl1_execution_log)
+				_Utilities.create_cfdi(new_cfdi,logger=process_logger,log=sl1_execution_log)
 				process_logger.info(3*LOG_INDENT + str(n) + '. ' + uuid + ' stored in Forest DB')
 		# Update Forest DB -> JUST UPDATING:
 		process_logger.info(2*LOG_INDENT + 'UPDATING FOREST DB (updating existing CFDIs) ... ')

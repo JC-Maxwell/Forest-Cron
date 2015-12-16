@@ -443,13 +443,17 @@ def create_cfdi(new_cfdi,logger=None,log=None):
 			'buyer': new_cfdi['buyer'],
 			'seller': new_cfdi['seller'],
 			'status': new_cfdi['status'],
-			'certification_date': sat_date_to_ISODate(new_cfdi['certification_date']),
-			'issued_date': sat_date_to_ISODate(new_cfdi['issued_date']),
 			'voucher_effect' : new_cfdi['voucher_effect'] if 'voucher_effect' in new_cfdi else None
 		}#End of db_ne_cfdi
+		if 'simulated' in new_cfdi and new_cfdi['simulated'] == True:
+			db_new_cfdi['certification_date'] = new_cfdi['certification_date']# It comes from db -- date is already parsed -- 
+			db_new_cfdi['issued_date'] = new_cfdi['issued_date']
+		else:
+			db_new_cfdi['certification_date'] = sat_date_to_ISODate(new_cfdi['certification_date'])
+			db_new_cfdi['issued_date'] = sat_date_to_ISODate(new_cfdi['issued_date'])
 		# Get xml data:
 		xml = new_cfdi['xml']
-		if xml is not None:
+		if xml is not None and xml != '':#bug_solved, xml was '' and it causes errors in cfdi_type, currency and taxes
 			cfdi_type = get_cfdi_type(xml,logger=logger)
 			validation = _Pauli_Helper.validate_xml(xml)
 			xml_warnings = validation['warnings']
@@ -476,14 +480,13 @@ def create_cfdi(new_cfdi,logger=None,log=None):
 			db_new_cfdi['_t_ieps'] = taxes_included['_t_ieps'] if taxes_included['_t_ieps'] is not None else False
 			log['forest_db']['after']['new'] = log['forest_db']['after']['new'] + 1
 		elif new_cfdi['status'] == _Constants.CANCELED_STATUS:
-			db_new_cfdi['xml'] = _Helper.build_default_xml(db_new_cfdi['seller'],db_new_cfdi['buyer'],db_new_cfdi['certification_date'],db_new_cfdi['issued_date'],db_new_cfdi['voucher_effect'],db_new_cfdi['uuid'])
+			# db_new_cfdi['xml'] = _Helper.build_default_xml(db_new_cfdi['seller'],db_new_cfdi['buyer'],db_new_cfdi['certification_date'],db_new_cfdi['issued_date'],db_new_cfdi['voucher_effect'],db_new_cfdi['uuid'])
 			log['forest_db']['after']['new'] = log['forest_db']['after']['new'] + 1
 		else:
 			log['forest_db']['after']['pending'] = log['forest_db']['after']['pending'] + 1
 		db_CFDI.insert(db_new_cfdi)
 	except Exception as e:
-		if logger is not None:
-			logger.critical(e.message)
+		logger.critical(e.message)
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
@@ -601,7 +604,6 @@ def get_cfdi_type(cfdi_xml,logger=None):
 			cfdi_type = _Constants.TRANSPORT_DOCUMENT_CFDI_TYPE
 		else: 
 			cfdi_type = _Constants.NORMAL_CFDI_TYPE
-		print 'Type: ' + str(cfdi_type)
 		return cfdi_type
 	except Exception as e:
 		if logger is not None:
