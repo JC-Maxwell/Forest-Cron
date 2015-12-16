@@ -127,7 +127,7 @@ def get_cfdis_in_corebook_for_this_taxpayer_at_period(identifier,begin_date,end_
 					uuid = cfdi_in_corebook_db['uuid'].upper()
 					if uuid in transactions_by_uuid:
 						cfdi_transaction = transactions_by_uuid[uuid]
-						cfdi_in_corebook_db['status'] = _Constants.CANCELED_STATUS if cfdi_transaction['fiscalStatus'] is _Constants.CB_CANCELED_FISCAL_STATUS else _Constants.VALID_STATUS
+						cfdi_in_corebook_db['status'] = _Constants.CANCELED_STATUS if 'fiscalStatus' in cfdi_transaction and cfdi_transaction['fiscalStatus'] is _Constants.CB_CANCELED_FISCAL_STATUS else _Constants.VALID_STATUS
 			# Join results in a dict:
 			cfdis_in_corebook_db_dict = {}
 			for cfdi_in_corebook_db in cfdis_in_corebook_db:
@@ -192,7 +192,7 @@ def get_missing_cfdis_in_each_db(cfdis_in_forest_db,cfdis_in_corebook_db,logger=
 # With this configuration CFDIs are going to be stored in Corebook
 STORING_CONFIGURATION = {
 	'test' : False,# Store as testing object in db
-	'predict' : True,# Each CFDI will be predicted
+	'predict' : False,# Each CFDI will be predicted
 	'store' : True,# Will be stored
 	'replace' : True,# If already exists a ticket with this uuid it will be replaced
 	'indent' : 2*LOG_INDENT# Just for logging
