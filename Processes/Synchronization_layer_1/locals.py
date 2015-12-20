@@ -331,7 +331,7 @@ def update_synchronization_data_for_taxpayer(taxpayer,sl1_execution_log,logger=N
 				'total' : cfdis_in_forest_db_count
 			}# End of synchronization_log
 		}# End of synchronization_log
-		taxpayer_logs = taxpayer['logs'] if 'logs' in taxpayer else {}
+		taxpayer_logs = taxpayer['logs'] if 'logs' in taxpayer and taxpayer['logs'] is not None else {}
 		taxpayer_synchronization_logs = taxpayer_logs[_Constants.SYNCHRONIZATION] if _Constants.SYNCHRONIZATION in taxpayer_logs else []
 		taxpayer_synchronization_logs.append(synchronization_log)
 		if len(taxpayer_synchronization_logs) > _Constants.LIMIT_LOGS_PER_TAXPAYER: 
