@@ -432,9 +432,10 @@ def update_taxpayer_status(taxpayer,process_constant,logger=None):
 # \_| \___/|_|     \____/\_|   |___/  \___/___(_)
  
 # Create a new CFDI in Forest DB:
-def create_cfdi(new_cfdi,logger=None,log=None):
+def create_cfdi(new_cfdi,logger=None,log=None,forest_db=None):
 	try:
-		forest_db = set_connection_to_forest_db()
+		if forest_db is None:
+			forest_db = set_connection_to_forest_db()
 		db_CFDI = forest_db['CFDI']
 		uuid = new_cfdi['uuid'].upper()
 		# Build new db cfdi:
@@ -445,6 +446,7 @@ def create_cfdi(new_cfdi,logger=None,log=None):
 			'status': new_cfdi['status'],
 			'voucher_effect' : new_cfdi['voucher_effect'] if 'voucher_effect' in new_cfdi else None
 		}#End of db_ne_cfdi
+		logger.critical('Holaaaaa')
 		if 'simulated' in new_cfdi and new_cfdi['simulated'] == True:
 			db_new_cfdi['certification_date'] = new_cfdi['certification_date']# It comes from db -- date is already parsed -- 
 			db_new_cfdi['issued_date'] = new_cfdi['issued_date']

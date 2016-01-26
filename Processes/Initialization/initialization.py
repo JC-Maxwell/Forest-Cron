@@ -159,11 +159,15 @@ def excute_initialization_for_taxpayer(taxpayer=None,process_logger=None):
 			# Update Forest DB -> NEW OR COMPLETED:
 			process_logger.info(2*LOG_INDENT + 'UPDATING FOREST DB ... ')
 			n = 0
+			forest_db = _Utilities.set_connection_to_forest_db()
 			for new_cfdi in new_cfdis:
-				uuid = new_cfdi['uuid']
-				_Utilities.create_cfdi(new_cfdi,logger=process_logger,log=initialization_log)
-				n = n + 1
-				process_logger.info(3*LOG_INDENT + str(n) + '. ' + uuid + ' stored in Forest DB')
+				try:
+					uuid = new_cfdi['uuid']
+					_Utilities.create_cfdi(new_cfdi,logger=process_logger,log=initialization_log,forest_db=forest_db)
+					n = n + 1
+					process_logger.info(3*LOG_INDENT + str(n) + '. ' + uuid + ' stored in Forest DB')
+				except:
+					process_logger.info(3*LOG_INDENT + str(n) + '. ' + uuid + ' could not be stored in Forest DB (ERROR)')
 			process_logger.info(2*LOG_INDENT + 'SUMMARY ... ')
 			process_logger.info(3*LOG_INDENT + 'New stored:         ' + str(initialization_log['forest_db']['after']['new']))
 			process_logger.info(3*LOG_INDENT + 'Pending:            ' + str(initialization_log['forest_db']['after']['pending']))

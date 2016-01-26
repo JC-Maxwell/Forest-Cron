@@ -52,7 +52,8 @@ from forest_firmware.isa import instructions as ISA
 # 				'$in' : [
 # 					'83000FEA-35C7-4CCB-9136-45F8FF7D90C6',# credit note
 # 					'3A58597F-E0A3-474A-8299-E34E9DBFFE68',# payroll
-# 					'E254BDBC-9F6A-4056-85AF-0557FD20391C'# normal
+# 					'E254BDBC-9F6A-4056-85AF-0557FD20391C',# normal
+#					'92208CFE-77BD-458F-A88B-A5C84CB452F9'# transport document
 # 				]# End of in 
 # 			}# End of uuid
 # 		})# End simulated_cfdis
