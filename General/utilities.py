@@ -22,6 +22,7 @@ from datetime import datetime as Datetime
 from datetime import date as Date
 import signal
 import datetime
+from dateutil.relativedelta import *
 
 # Pauli SDK dependency:
 from pauli_sdk.Modules import constants as _Pauli_Constants
@@ -355,6 +356,10 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 		if debug_execution is True:
 			logger.info(LOG_INDENT + 'Retrieving debug taxpayers for ' + process_name + ' process')
 			process_name_filter['debug'] = True
+		if process_name == 'equalization' or process_name == 'synchronization_layer_1':
+			last_session_lower_limit = datetime.datetime.now() - relativedelta(months=2)
+			logger.info(LOG_INDENT + 'Addion last session filter to ' + str(last_session_lower_limit))
+			process_name_filter['last_session'] = { '$gt' : last_session_lower_limit }
 		forest_db = set_connection_to_forest_db()
 		db_Taxpayer = forest_db['Taxpayer']
 		if limit is not None and from_taxpayer is None:
@@ -399,6 +404,8 @@ def create_new_taxpayer(db_taxpayer,logger=None):
 			'data' : db_taxpayer['data'] if 'data' in db_taxpayer else None,
 			'start_date' : db_taxpayer['start_date']
 		}#End of new_taxpayer
+		if 'last_session' in db_taxpayer:
+			new_taxpayer['last_session'] = db_taxpayer['last_session']
 		if 'debug' in db_taxpayer:
 			new_taxpayer['debug'] = db_taxpayer['debug']
 		return new_taxpayer
@@ -446,7 +453,6 @@ def create_cfdi(new_cfdi,logger=None,log=None,forest_db=None):
 			'status': new_cfdi['status'],
 			'voucher_effect' : new_cfdi['voucher_effect'] if 'voucher_effect' in new_cfdi else None
 		}#End of db_ne_cfdi
-		logger.critical('Holaaaaa')
 		if 'simulated' in new_cfdi and new_cfdi['simulated'] == True:
 			db_new_cfdi['certification_date'] = new_cfdi['certification_date']# It comes from db -- date is already parsed -- 
 			db_new_cfdi['issued_date'] = new_cfdi['issued_date']
