@@ -358,7 +358,7 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 			process_name_filter['debug'] = True
 		if process_name == 'equalization' or process_name == 'synchronization_layer_1':
 			last_session_lower_limit = datetime.datetime.now() - relativedelta(months=2)
-			logger.info(LOG_INDENT + 'Addion last session filter to ' + str(last_session_lower_limit))
+			logger.info(LOG_INDENT + 'Adding last session filter to ' + str(last_session_lower_limit))
 			process_name_filter['last_session'] = { '$gt' : last_session_lower_limit }
 		forest_db = set_connection_to_forest_db()
 		db_Taxpayer = forest_db['Taxpayer']

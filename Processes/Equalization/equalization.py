@@ -15,6 +15,7 @@
 import sys
 from datetime import datetime as Datetime
 from datetime import date as Date
+from dateutil.relativedelta import *
 import multiprocessing
 
 # Pauli SDK dependency:
@@ -129,7 +130,16 @@ def equalize_dbs_for_a_taxpayer(taxpayer=None,process_logger=None):
 		}# End of log
 		# Get params:
 		identifier = taxpayer['identifier']
-		begin_date = taxpayer['start_date']#Since taxpayer claim to be synchronized
+		created_at = taxpayer['created_at']
+		created_at_lower_limit = Datetime.now() - relativedelta(months=1)
+		if created_at > created_at_lower_limit:
+			begin_date = taxpayer['start_date']#Since taxpayer claim to be synchronized
+			process_logger.info(2*LOG_INDENT + 'Chosing start date as begin date')
+		else:
+			current_date = Datetime.now()
+			current_year = current_date.year
+			begin_date = Datetime(current_year,1,1)# Jan 1st of the current year
+			process_logger.info(2*LOG_INDENT + 'Chosing ' + str(begin_date) + ' as begin date')
 		# year =  str(Datetime.now().year)
 		# months = _Utilities.get_current_fiscal_declaration_period(_Constants.TWO_MONTHS_PERIOD)
 		# begin_date = Datetime(int(year),int(months[0]),1)# Since previous month (optimization introduced on Sep 8, 2015)
