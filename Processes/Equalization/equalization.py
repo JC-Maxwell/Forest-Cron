@@ -132,6 +132,8 @@ def equalize_dbs_for_a_taxpayer(taxpayer=None,process_logger=None):
 		identifier = taxpayer['identifier']
 		created_at = taxpayer['created_at']
 		created_at_lower_limit = Datetime.now() - relativedelta(months=1)
+		force_start_date = True
+		# process_logger.info(2*LOG_INDENT + 'FORCING START DATE')
 		if created_at > created_at_lower_limit:
 			begin_date = taxpayer['start_date']#Since taxpayer claim to be synchronized
 			process_logger.info(2*LOG_INDENT + 'Chosing start date as begin date')
