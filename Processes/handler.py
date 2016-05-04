@@ -70,19 +70,24 @@ def validate(process_name,mode=None,server_index=None,debug_execution=False):
 		if debug_execution is True:
 			return validated
 		if mode == _Constants.BALANCER_MODE:
-			cron_logger.info(2*LOG_INDENT + 'Checking processs ' + process_name + ' availability ... ')
+			cron_logger.info(2*LOG_INDENT + 'Balancer mode, checking processs ' + process_name + ' availability ... ')
 			process_availability = _Utilities.check_process_availability(process_name)
 			if process_availability is not True:
 				cron_logger.info(LOG_INDENT + 'Process ' + process_name + ' is not available')
 				return False
 			return True
 		elif mode == _Constants.SERVER_MODE:
-			cron_logger.info(2*LOG_INDENT + 'Checking server ' + str(server_index) + ' of process ' + process_name + ' availability ... ')
-			server_availability = _Utilities.check_process_server_availability(process_name,server_index)
-			if server_availability is not True:
-				cron_logger.info(LOG_INDENT + 'Server ' + str(server_index) + ' of process ' + process_name + ' is not available')
-				return False
-			return True
+			cron_logger.info(2*LOG_INDENT + 'Server mode, checking processs ' + process_name + ' availability ... ')
+			process_availability = _Utilities.check_process_availability(process_name)
+			if process_availability is False:
+				cron_logger.info(2*LOG_INDENT + 'Checking server ' + str(server_index) + ' of process ' + process_name + ' availability ... ')
+				server_availability = _Utilities.check_process_server_availability(process_name,server_index)
+				if server_availability is not True:
+					cron_logger.info(LOG_INDENT + 'Server ' + str(server_index) + ' of process ' + process_name + ' is not available')
+					return False
+				return True
+			cron_logger.info(2*LOG_INDENT + 'Process ' + process_name + ' is available (then server processes are not available) ... ')
+			return False
 	except Already_Handled_Exception as already_handled_exception:
 		raise already_handled_exception
 	except Exception as e:

@@ -360,6 +360,7 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 			last_session_lower_limit = datetime.datetime.now() - relativedelta(months=2)
 			logger.info(LOG_INDENT + 'Adding last session filter to ' + str(last_session_lower_limit))
 			process_name_filter['last_session'] = { '$gt' : last_session_lower_limit }
+		process_name_filter['server_index'] = server_index
 		forest_db = set_connection_to_forest_db()
 		db_Taxpayer = forest_db['Taxpayer']
 		if limit is not None and from_taxpayer is None:
@@ -367,6 +368,8 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 		else:
 			db_taxpayers = db_Taxpayer.find(process_name_filter).sort('created_at',1)
 		taxpayers = []
+		from_taxpayer = None#from taxpayer was deprecated in multi-server version 0.1 (may 4 2016)
+		logger.info(LOG_INDENT + 'From taxpayer is DEPRECATED')	
 		if from_taxpayer is not None:
 			from_here = False
 			for db_taxpayer in db_taxpayers:
@@ -686,6 +689,8 @@ def update_current_taxpayer(process_name,current_taxpayer,current_taxpayer_index
 		process['current_taxpayer'] = current_taxpayer
 		process['current_taxpayer_index'] = current_taxpayer_index
 		process['current_taxpayer_triggered'] = Datetime.now()
+		if not 'total_taxpayers' in process:
+			process['total_taxpayers'] = 1# Just a bug
 		process['percentage_done'] = get_percentage_done(process['current_taxpayer_index'],process['total_taxpayers'])
 		forest_db = set_connection_to_forest_db()
 		db_Process = forest_db['Process']
@@ -870,7 +875,7 @@ def check_process_servers_availability(process_name,logger=None,db_Process=None)
 		servers_availability = process['servers_availability']
 		all_servers_are_available = True
 		logger.info(3*LOG_INDENT + 'Checking every server of ' + str(servers) + ' ... ')
-		for server_index in range(1,servers):
+		for server_index in range(1,servers+1):
 			server_index_str = str(server_index)
 			if server_index_str in servers_availability and servers_availability[server_index_str] is True:
 				logger.info(3*LOG_INDENT + 'Server ' + server_index_str + ' availability: True')
