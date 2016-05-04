@@ -350,7 +350,7 @@ def update_taxpayer_firmware_timeout(taxpayer,logger=None):
 		raise already_handled_exception
 
 # Retrieve all taxpayers that must be iterated in a specific process (i.e. syncrhonizing, initializing, updating and so on)
-def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=None,logger=None,debug_execution=False,server_index=None):
+def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=None,logger=None,debug_execution=False,server_index=None,mode=None):
 	try:
 		process_name_filter = FILTERS_BY_PROCESS_NAMES[process_name]
 		if debug_execution is True:
@@ -382,8 +382,10 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 			for db_taxpayer in db_taxpayers:
 				taxpayer = create_new_taxpayer(db_taxpayer,logger=logger)
 				taxpayers.append(taxpayer)
-		logger.info(LOG_INDENT + 'Total taxpayers pending: ' + str(len(taxpayers)))	
-		if server_index is not None and process_name is not _Constants.EQUALIZATION:# Once taxpayers were retrieved and filtered according to "from_taxpayer" param they are filtered by server index, Equalization process only runs at BALANCER mode (in balancer server)
+		logger.info(LOG_INDENT + 'Total taxpayers: ' + str(len(taxpayers)))	
+		# In balancer mode all taxpayers must be retrieved, they are just filtered if process is in server mode
+		if mode is not _Constants.BALANCER_MODE and server_index is not None and process_name is not _Constants.EQUALIZATION:# Once taxpayers were retrieved and filtered according to "from_taxpayer" param they are filtered by server index, Equalization process only runs at BALANCER mode (in balancer server)
+			logger.info(LOG_INDENT + 'Total taxpayers pending: ' + str(len(taxpayers)))	
 			logger.info(LOG_INDENT + 'Filtering for server: ' + str(server_index))
 			server_taxpayers = []
 			for taxpayer in taxpayers:

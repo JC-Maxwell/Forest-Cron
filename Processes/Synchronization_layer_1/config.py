@@ -56,6 +56,6 @@ synchronization_layer_1 = {
 			'pending' : 'F Keep Pending'
 		}
 	},# End of logging
-	'threads' : 3
+	'threads' : 1
 }# End of synchronization_layer_1
 

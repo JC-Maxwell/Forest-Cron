@@ -217,7 +217,7 @@ def execute(process):
 				cron_logger.info(LOG_INDENT + 'Logging calling at cron procesess ... ')
 				_Utilities.log_at_cron_processes(process)		
 			cron_logger.info(LOG_INDENT + 'Getting taxpayers for this process ... ')
-			taxpayers = _Utilities.get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=from_taxpayer,logger=cron_logger,debug_execution=debug_execution,server_index=server_index)
+			taxpayers = _Utilities.get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=from_taxpayer,logger=cron_logger,debug_execution=debug_execution,server_index=server_index,mode=forest_mode)
 			# Set unavailable:
 			if forest_mode == _Constants.SERVER_MODE:
 				cron_logger.info(2*LOG_INDENT + 'Setting server ' + str(server_index) + ' unavailable for ' + process_name)
