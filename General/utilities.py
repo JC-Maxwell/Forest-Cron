@@ -866,6 +866,7 @@ def check_process_servers_availability(process_name,logger=None,db_Process=None,
 		process = get_db_process(process_name,logger=logger)
 		servers_availability = process['servers_availability']
 		all_servers_are_available = True
+		logger.info(3*LOG_INDENT + 'Checking every server ... ')
 		for server_index in range(1,servers):
 			server_index_str = str(server_index)
 			if server_index_str in servers_availability and servers_availability[server_index_str] is True:
