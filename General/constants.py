@@ -19,6 +19,10 @@ import logging
 # Paths:
 THREADS_DIR = '/Threads'
 
+# Forest Mode
+BALANCER_MODE = 1
+SERVER_MODE = 2
+
 # Time Out:
 DEFAULT_FIRMWARE_TIMEOUT = 3600# One hour
 UPDATING_FIRMWARE_TIMEOUT_RATE = 1.5

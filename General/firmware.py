@@ -37,7 +37,7 @@ FIRMWARE_STABLISH_CONNECTION_TIME_ON_SECONDS = _Constants.FIRMWARE_STABLISH_CONN
 FIRMWARE_WAITING_TIME_ON_SECONDS = _Constants.FIRMWARE_WAITING_TIME_ON_SECONDS
 
 # Firmware (comment this to simulate firmware):
-from forest_firmware.isa import instructions as ISA
+# from forest_firmware.isa import instructions as ISA
 # Firmware simulation (uncomment this to simulate firmware
 # --------------------- BEGIN OF FIRMWARE SIMULATION ---------------------
 # Just a firmware simulation for debugging:

@@ -24,8 +24,11 @@ import multiprocessing
 from multiprocessing import Value
 
 SL1_LOGGING_CONFIG = _SL1_Config.synchronization_layer_1['logging']
+SL1_THREADS = _SL1_Config.synchronization_layer_1['threads']
 EQUALIZATION_LOGGING_CONFIG = _Equalization_Config.equalization['logging']
+EQUALIZATION_THREADS = _Equalization_Config.equalization['threads']
 INITIALIZATION_LOGGING_CONFIG = _Initialization_config.initialization['logging']
+INITIALIZATION_THREADS = _Initialization_config.initialization['threads']
 
 SL1_TABLE_TITLES = SL1_LOGGING_CONFIG['table_titles']
 SL1_DEFAULT_LOG = {}
@@ -47,13 +50,15 @@ for key in INITIALIZATION_TABLE_TITLES:
 # ======================================================== CODE
 
 process_handler = {
+	'forest_mode' : 1,#Choose 1 if it will act as a balancer or 2 if it will act as a final server (states are at constants.py)
+	'server_index' : 1,#If forest_mode is 1 this data will be ignored
 	'synchronization_layer_1' : {
 		'process_instance' : _Synchronization_Layer_1.excute_synchronization_layer_1,# Process instance that will be executed for each subprocess (thread) of this process
 		'process_name' : 'synchronization_layer_1',
 		'process_file_name' : SL1_LOGGING_CONFIG['process_file_name'],
 		'specific_process_logger' : _Utilities.get_logger(SL1_LOGGING_CONFIG['process_file_name']),# Logger for this process (Note: each subprocess of this process will have its own logs but this is the main logger of this process)
 		'cron_logger_starting_message' : 'SL1 start',# Message to confirm the main logger (cron-logger) that process has started
-		'threads' : 1,
+		'threads' : SL1_THREADS,# Threads or servers (depending on the mode) in which this process will run
 		'specific_shared_variables' : {
 			'current_table_row' : Value('i',SL1_LOGGING_CONFIG['table_row_limit'])
 		},
@@ -65,7 +70,7 @@ process_handler = {
 		'process_file_name' : EQUALIZATION_LOGGING_CONFIG['process_file_name'],
 		'specific_process_logger' : _Utilities.get_logger(EQUALIZATION_LOGGING_CONFIG['process_file_name']),
 		'cron_logger_starting_message' : 'EQUALIZATION start',
-		'threads' : 1,
+		'threads' : EQUALIZATION_THREADS,
 		'specific_shared_variables' : {
 			'current_table_row' : Value('i',EQUALIZATION_LOGGING_CONFIG['table_row_limit'])
 		},
@@ -77,7 +82,7 @@ process_handler = {
 		'process_file_name' : INITIALIZATION_LOGGING_CONFIG['process_file_name'],
 		'specific_process_logger' : _Utilities.get_logger(INITIALIZATION_LOGGING_CONFIG['process_file_name']),
 		'cron_logger_starting_message' : 'INITIALIZATION start',
-		'threads' : 1,
+		'threads' : INITIALIZATION_THREADS,
 		'specific_shared_variables' : {
 			'current_table_row' : Value('i',INITIALIZATION_LOGGING_CONFIG['table_row_limit'])
 		},

@@ -350,7 +350,7 @@ def update_taxpayer_firmware_timeout(taxpayer,logger=None):
 		raise already_handled_exception
 
 # Retrieve all taxpayers that must be iterated in a specific process (i.e. syncrhonizing, initializing, updating and so on)
-def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=None,logger=None,debug_execution=False):
+def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=None,logger=None,debug_execution=False,server_index=None):
 	try:
 		process_name_filter = FILTERS_BY_PROCESS_NAMES[process_name]
 		if debug_execution is True:
@@ -382,6 +382,15 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 			for db_taxpayer in db_taxpayers:
 				taxpayer = create_new_taxpayer(db_taxpayer,logger=logger)
 				taxpayers.append(taxpayer)
+		logger.info(LOG_INDENT + 'Total taxpayers pending: ' + str(len(taxpayers)))	
+		if server_index is not None:# Once taxpayers were retrieved and filtered according to "from_taxpayer" param they are filtered by server index
+			logger.info(LOG_INDENT + 'Filtering for server: ' + str(server_index))
+			server_taxpayers = []
+			for taxpayer in taxpayers:
+				if 'server_index' in taxpayer and taxpayer['server_index'] == server_index:
+					server_taxpayers.append(taxpayer)
+			logger.info(LOG_INDENT + 'Total taxpayers pending on this server: ' + str(len(server_taxpayers)))
+			taxpayers = server_taxpayers
 		return taxpayers
 	except Exception as e:
 		# sl1_logger.critical(e.message)
@@ -402,7 +411,8 @@ def create_new_taxpayer(db_taxpayer,logger=None):
 			'firmware_timeout' : db_taxpayer['firmware_timeout'] if 'firmware_timeout' in db_taxpayer else None,
 			'initialized_at' : db_taxpayer['initialized_at'] if 'initialized_at' in db_taxpayer else None,
 			'data' : db_taxpayer['data'] if 'data' in db_taxpayer else None,
-			'start_date' : db_taxpayer['start_date']
+			'start_date' : db_taxpayer['start_date'],
+			'server_index' : db_taxpayer['server_index'] if 'server_index' in db_taxpayer else None
 		}#End of new_taxpayer
 		if 'last_session' in db_taxpayer:
 			new_taxpayer['last_session'] = db_taxpayer['last_session']
@@ -425,6 +435,29 @@ def update_taxpayer_status(taxpayer,process_constant,logger=None):
 		date_field = STATUS_DATES[process_constant]
 		taxpayer[date_field] = Datetime.now()
 		db_Taxpayer.save(taxpayer)
+	except Exception as e:
+		if logger is not None:
+			logger.critical(e.message)
+		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception
+
+# This update is for balancing each thread in a different server (introduced on May 3rd 2016)
+def update_taxpayers_server_index(identifiers,index,logger=None):# The index if the server in which this taxpayers (identfiers) will be processed
+	try:
+		forest_db = set_connection_to_forest_db()
+		db_Taxpayer = forest_db['Taxpayer']
+		taxpayer_filter = {
+			'identifier' : {
+				'$in' : identifiers
+			}#End of identifier
+		}#End of taxpayer_filter
+		taxpayer_update = {
+			'$set' : {
+				'server_index' : index
+			}#End of $set
+		}#End of taxpayer_update
+		db_update_result = db_Taxpayer.update(taxpayer_filter,taxpayer_update,multi=True)	
+		return db_update_result
 	except Exception as e:
 		if logger is not None:
 			logger.critical(e.message)
@@ -750,6 +783,36 @@ def set_process_available(process_name,process_duration=0,logger=None,db_Process
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
+def set_process_server_available(process_name,server_index,logger=None,db_Process=None):
+	try:
+		if db_Process is None:
+			forest_db = set_connection_to_forest_db()
+			db_Process = forest_db['Process']
+		process = get_db_process(process_name,logger=logger)
+		server_index_str = str(server_index)
+		process['servers_availability'][server_index_str] = True
+		db_Process.save(process)
+	except Exception as e:
+		if logger is not None:
+			logger.critical(e.message)
+		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception
+
+def set_process_server_unavailable(process_name,server_index,logger=None,db_Process=None):
+	try:
+		if db_Process is None:
+			forest_db = set_connection_to_forest_db()
+			db_Process = forest_db['Process']
+		process = get_db_process(process_name,logger=logger)
+		server_index_str = str(server_index)
+		process['servers_availability'][server_index_str] = False
+		db_Process.save(process)
+	except Exception as e:
+		if logger is not None:
+			logger.critical(e.message)
+		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception
+
 def check_process_availability(process_name,logger=None,db_Process=None,debug_execution=False):
 	try:
 		available = True
@@ -767,6 +830,45 @@ def check_process_availability(process_name,logger=None,db_Process=None,debug_ex
 		process['last_requested'] = Datetime.now()
 		db_Process.save(process)
 		return available
+	except Exception as e:
+		# sl1_logger.critical(e.message)
+		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception
+
+def check_process_server_availability(process_name,server_index,logger=None,db_Process=None,servers=None):
+	try:
+		if db_Process is None:
+			forest_db = set_connection_to_forest_db()
+			db_Process = forest_db['Process']
+		process = get_db_process(process_name,logger=logger)
+		servers_availability = process['servers_availability']
+		server_index_str = str(server_index)
+		if server_index_str in servers_availability and servers_availability[server_index_str] is True:
+			available = True
+		else:
+			available = False
+		return available
+	except Exception as e:
+		# sl1_logger.critical(e.message)
+		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception
+
+def check_process_servers_availability(process_name,logger=None,db_Process=None,servers=None):
+	try:
+		available = True
+		if db_Process is None:
+			forest_db = set_connection_to_forest_db()
+			db_Process = forest_db['Process']
+		process = get_db_process(process_name,logger=logger)
+		servers_availability = process['servers_availability']
+		all_servers_all_available = True
+		for server_index in range(1,servers):
+			server_index_str = str(server_index)
+			if server_index_str in servers_availability and servers_availability[server_index_str] is True:
+				all_servers_all_available = all_servers_all_available and True
+			else:
+				all_servers_all_available = all_servers_all_available and False
+		return all_servers_all_available
 	except Exception as e:
 		# sl1_logger.critical(e.message)
 		already_handled_exception = Already_Handled_Exception(e.message)

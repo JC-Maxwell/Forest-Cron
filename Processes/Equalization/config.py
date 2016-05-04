@@ -57,5 +57,6 @@ equalization = {
 			'stored' : 'CFDIs stored in CB DB',
 			'errors' : 'Errors'
 		}
-	}# End of logging
+	},# End of logging
+	'threads' : 1
 }# End of equalization
