@@ -360,7 +360,6 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 			last_session_lower_limit = datetime.datetime.now() - relativedelta(months=2)
 			logger.info(LOG_INDENT + 'Adding last session filter to ' + str(last_session_lower_limit))
 			process_name_filter['last_session'] = { '$gt' : last_session_lower_limit }
-		process_name_filter['server_index'] = server_index
 		forest_db = set_connection_to_forest_db()
 		db_Taxpayer = forest_db['Taxpayer']
 		if limit is not None and from_taxpayer is None:
