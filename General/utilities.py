@@ -383,7 +383,7 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 				taxpayer = create_new_taxpayer(db_taxpayer,logger=logger)
 				taxpayers.append(taxpayer)
 		logger.info(LOG_INDENT + 'Total taxpayers pending: ' + str(len(taxpayers)))	
-		if server_index is not None:# Once taxpayers were retrieved and filtered according to "from_taxpayer" param they are filtered by server index
+		if server_index is not None and process_name is not _Constants.EQUALIZATION:# Once taxpayers were retrieved and filtered according to "from_taxpayer" param they are filtered by server index, Equalization process only runs at BALANCER mode (in balancer server)
 			logger.info(LOG_INDENT + 'Filtering for server: ' + str(server_index))
 			server_taxpayers = []
 			for taxpayer in taxpayers:
@@ -391,6 +391,8 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 					server_taxpayers.append(taxpayer)
 			logger.info(LOG_INDENT + 'Total taxpayers pending on this server: ' + str(len(server_taxpayers)))
 			taxpayers = server_taxpayers
+		if process_name is _Constants.EQUALIZATION:
+			logger.info(LOG_INDENT + 'Equalization process will not be filtered')
 		return taxpayers
 	except Exception as e:
 		# sl1_logger.critical(e.message)
