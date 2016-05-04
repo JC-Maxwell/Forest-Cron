@@ -732,7 +732,7 @@ def new_process(process_name,logger=None,db_Process=None):
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
-def set_process_unavailable(process_name,taxpayers=[],logger=None,db_Process=None,debug_execution=False):
+def set_process_unavailable(process_name,taxpayers=[],logger=None,db_Process=None,debug_execution=False,threads=None):
 	try:
 		if db_Process is None:
 			forest_db = set_connection_to_forest_db()
@@ -741,6 +741,8 @@ def set_process_unavailable(process_name,taxpayers=[],logger=None,db_Process=Non
 		if debug_execution is not True:# These attributes are updated just if it is not a debug execution
 			process['last_triggered'] = Datetime.now()
 			process['available'] = False
+			if threads is not None:
+				process['servers'] = threads
 		process['total_taxpayers'] = len(taxpayers)
 		process['percentage_done'] = '0.00%'
 		db_Process.save(process)
@@ -857,16 +859,17 @@ def check_process_server_availability(process_name,server_index,logger=None,db_P
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
-def check_process_servers_availability(process_name,logger=None,db_Process=None,servers=None):
+def check_process_servers_availability(process_name,logger=None,db_Process=None):
 	try:
 		available = True
 		if db_Process is None:
 			forest_db = set_connection_to_forest_db()
 			db_Process = forest_db['Process']
 		process = get_db_process(process_name,logger=logger)
+		servers = process['servers']
 		servers_availability = process['servers_availability']
 		all_servers_are_available = True
-		logger.info(3*LOG_INDENT + 'Checking every server ... ')
+		logger.info(3*LOG_INDENT + 'Checking every server of ' + str(servers) + ' ... ')
 		for server_index in range(1,servers):
 			server_index_str = str(server_index)
 			if server_index_str in servers_availability and servers_availability[server_index_str] is True:

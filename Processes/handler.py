@@ -224,7 +224,7 @@ def execute(process):
 				_Utilities.set_process_server_unavailable(process_name,server_index,logger=cron_logger)
 			elif forest_mode == _Constants.BALANCER_MODE:
 				cron_logger.info(LOG_INDENT + 'Setting process ' + process_name + ' unavailable')
-				process_availability = _Utilities.set_process_unavailable(process_name,taxpayers=taxpayers,logger=cron_logger,debug_execution=debug_execution)
+				process_availability = _Utilities.set_process_unavailable(process_name,taxpayers=taxpayers,logger=cron_logger,debug_execution=debug_execution,threads=threads)
 				cron_logger.info(LOG_INDENT + process_name + ' availability: ' + str(process_availability))
 			# Multi-threading execution:
 			cron_logger.info(LOG_INDENT + 'Executing ... ')
@@ -248,7 +248,7 @@ def execute(process):
 				cron_logger.info(2*LOG_INDENT + 'Setting server ' + str(server_index) + ' available for ' + process_name)
 				_Utilities.set_process_server_available(process_name,server_index,logger=cron_logger)
 				# BALANCER MODE is set available once all servers are available:
-				all_servers_are_available = _Utilities.check_process_servers_availability(process_name,logger=cron_logger,servers=threads)
+				all_servers_are_available = _Utilities.check_process_servers_availability(process_name,logger=cron_logger)
 				cron_logger.info(2*LOG_INDENT + 'All servers availability ' + str(all_servers_are_available))
 				if all_servers_are_available:
 					cron_logger.info(2*LOG_INDENT + 'Setting process available for ' + process_name)
