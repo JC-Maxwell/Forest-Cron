@@ -349,8 +349,72 @@ def update_taxpayer_firmware_timeout(taxpayer,logger=None):
 		already_handled_exception = Already_Handled_Exception(e.message)
 		raise already_handled_exception
 
+def validate_forcing_identifiers(forcing_identifiers,process_name,logger=None):
+	try:
+		print 'Validating identifiers ... '
+		if logger is not None:
+			logger.info(LOG_INDENT + 'Validating identifiers ... ')
+		process_name_filter = FILTERS_BY_PROCESS_NAMES[process_name]
+		forest_db = set_connection_to_forest_db()
+		db_Taxpayer = forest_db['Taxpayer']
+		all_are_valid = True
+		i = 0
+		for identifier in forcing_identifiers:
+			i = i + 1
+			process_name_filter['identifier'] = identifier
+			it_exists = db_Taxpayer.find(process_name_filter).count()
+			if it_exists and it_exists == 1:
+				all_are_valid = all_are_valid and True
+				message = 2*LOG_INDENT + str(i) + '. ' + identifier + ' is valid'
+				if logger is not None:
+					logger.info(message)
+				print message
+			else:
+				all_are_valid = all_are_valid and False
+				message = 2*LOG_INDENT + str(i) + '. ' + identifier + ' is not valid'
+				if logger is not None:
+					logger.info(message)
+				print message
+		return all_are_valid
+	except Exception as e:
+		if logger is not None:
+			logger.critical(e.message)
+		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception
+
+def validate_params(process_params,logger=None):
+	try:
+		is_month = 'month' in process_params
+		is_year = 'year' in process_params
+		if is_month or is_year:
+			if is_month and is_year:
+				month = process_params['month']
+				year = process_params['year']
+				months = range(1,13)
+				current_year = Datetime.now().year
+				years = range(2013,current_year+1)
+				if month not in months:
+					print 'Invalid month param equal to ' + str(month) + ', it must be in ' + str(months)
+					return False
+				if year not in years:
+					print 'Invalid year param equal to ' + str(year) + ', it must be in ' + str(years)
+					return False
+				process_params['month'] = u"%02d" % (process_params['month'],)
+				process_params['year'] = unicode(process_params['year'])
+				return True	
+			else:
+				print 'Month and year params must exist (both of them)'
+				return False
+		else:
+			return True
+	except Exception as e:
+		if logger is not None:
+			logger.critical(e.message)
+		already_handled_exception = Already_Handled_Exception(e.message)
+		raise already_handled_exception
+
 # Retrieve all taxpayers that must be iterated in a specific process (i.e. syncrhonizing, initializing, updating and so on)
-def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=None,logger=None,debug_execution=False,server_index=None,mode=None):
+def get_taxpayers_for_a_specific_process(process_name,forcing_identifiers=None,limit=None,from_taxpayer=None,logger=None,debug_execution=False,server_index=None,mode=None):
 	try:
 		process_name_filter = FILTERS_BY_PROCESS_NAMES[process_name]
 		if debug_execution is True:
@@ -360,6 +424,11 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 			last_session_lower_limit = datetime.datetime.now() - relativedelta(months=2)
 			logger.info(LOG_INDENT + 'Adding last session filter to ' + str(last_session_lower_limit))
 			process_name_filter['last_session'] = { '$gt' : last_session_lower_limit }
+		if forcing_identifiers is not None:
+			logger.info(LOG_INDENT + 'Adding forcing taxpayers filter')
+			process_name_filter['identifier'] = {
+				'$in' : forcing_identifiers
+			}#End of forcing_identifiers
 		forest_db = set_connection_to_forest_db()
 		db_Taxpayer = forest_db['Taxpayer']
 		if limit is not None and from_taxpayer is None:
@@ -385,6 +454,9 @@ def get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=N
 				taxpayer = create_new_taxpayer(db_taxpayer,logger=logger)
 				taxpayers.append(taxpayer)
 		logger.info(LOG_INDENT + 'Total taxpayers: ' + str(len(taxpayers)))	
+		if forcing_identifiers is not None:
+			logger.info(LOG_INDENT + 'Forcing execution will not be filtered')
+			return taxpayers
 		# In balancer mode all taxpayers must be retrieved, they are just filtered if process is in server mode
 		if mode is not _Constants.BALANCER_MODE and server_index is not None and process_name is not _Constants.EQUALIZATION:# Once taxpayers were retrieved and filtered according to "from_taxpayer" param they are filtered by server index, Equalization process only runs at BALANCER mode (in balancer server)
 			logger.info(LOG_INDENT + 'Total taxpayers pending: ' + str(len(taxpayers)))	
@@ -1097,6 +1169,28 @@ def handle_forest_cron_success(success,logger=None):
 		if logger is not None:
 			logger.info(e)
 
+def get_chat_ids(logger=None):
+	try:
+		chat_ids = {}
+		updates = telegram_forest_bot.getUpdates()
+		for item in updates:
+			if item['message'] and item['message']['chat'] and item['message']['chat']['id']:
+				chat_id = str(item['message']['chat']['id'])
+				if not chat_id in chat_ids:
+					chat_ids[chat_id] = True
+		chats = []
+		for chat_id in chat_ids:
+			chat = int(chat_id)
+			chats.append(chat)
+		return chats
+	except Exception as e:
+		print e
+
+def send_message_to_forest_telegram_contacts(message,logger=None):
+	chat_ids = get_chat_ids(logger=logger)
+	for chat_id in chat_ids:
+		logger.info(3*LOG_INDENT + 'Chat id -> ' + str(chat_id))
+		telegram_forest_bot.sendMessage(chat_id=chat_id,text=message)
 
 
 

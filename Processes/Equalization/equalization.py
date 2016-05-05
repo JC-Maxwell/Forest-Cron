@@ -53,6 +53,11 @@ def equalize_dbs(taxpayers,shared_variables):# Taxpayers are the ones splitted f
 		current_taxpayer = shared_variables['current_taxpayer']
 		total_taxpayers = shared_variables['total_taxpayers']
 		current_table_row = shared_variables['current_table_row']
+		forcing_execution = shared_variables['forcing_execution']
+		process_params = shared_variables['process_params']
+		forcing_period = False
+		if 'year' in process_params or 'all' in process_params:
+			forcing_period = True
 		lock = shared_variables['lock']
 		# Process:
 		process_name = multiprocessing.current_process().name
@@ -66,13 +71,15 @@ def equalize_dbs(taxpayers,shared_variables):# Taxpayers are the ones splitted f
 		process_logger.info(_Constants.LOG_SEPARATOR)
 		process_logger.info(EQUALIZATION_PROCESS_NAME + ' - ' + process_name.upper())
 		taxpayers_equalized_counter = 0
+		process_logger.info(LOG_INDENT + 'Forcing execution: ' + str(forcing_execution))
 		process_logger.info(LOG_INDENT + 'Taxpayers: ' + str(total_taxpayers_for_this_subprocess))
 		for taxpayer in taxpayers:
-			_Utilities.update_current_taxpayer(_Constants.EQUALIZATION,taxpayer['identifier'],current_taxpayer.value+1,logger=process_logger)
+			if not forcing_execution:
+				_Utilities.update_current_taxpayer(_Constants.EQUALIZATION,taxpayer['identifier'],current_taxpayer.value+1,logger=process_logger)
 			percentage_of_equalization_done = _Utilities.get_process_percentage_done(taxpayers_equalized_counter,total_taxpayers_for_this_subprocess)
 			taxpayers_equalized_counter = taxpayers_equalized_counter + 1# Specific taxpayers (this thread's counter)
 			process_logger.info(LOG_INDENT + '-> (' + str(taxpayers_equalized_counter) + '/' + str(total_taxpayers_for_this_subprocess)  + ') ' + taxpayer['identifier'] + ' --- ' + percentage_of_equalization_done)
-			equalization_data = equalize_dbs_for_a_taxpayer(taxpayer=taxpayer,process_logger=process_logger)
+			equalization_data = equalize_dbs_for_a_taxpayer(forcing_period=forcing_period,forcing_execution=forcing_execution,taxpayer=taxpayer,process_logger=process_logger,process_params=process_params)
 			with lock:
 				current_taxpayer.value = current_taxpayer.value + 1
 			current_date = Datetime.now()
@@ -118,7 +125,7 @@ def equalize_dbs(taxpayers,shared_variables):# Taxpayers are the ones splitted f
 		raise already_handled_exception
 
 # Equalize Forest DB an Corebook DB in a given period for a given identifier (i.e. It ensures both data bases contain the same CFDIs)
-def equalize_dbs_for_a_taxpayer(taxpayer=None,process_logger=None):
+def equalize_dbs_for_a_taxpayer(forcing_period=False,forcing_execution=None,taxpayer=None,process_logger=None,process_params=None):
 	try:
 		indent = '    '
 		log = {
@@ -142,11 +149,23 @@ def equalize_dbs_for_a_taxpayer(taxpayer=None,process_logger=None):
 			current_year = current_date.year
 			begin_date = Datetime(current_year,1,1)# Jan 1st of the current year
 			process_logger.info(2*LOG_INDENT + 'Chosing ' + str(begin_date) + ' as begin date')
+		if forcing_period:
+			year = int(process_params['year'])
+			month = int(process_params['month'])
+			begin_date = Datetime(year,month,1)
+			begin_date = begin_date.replace(hour=0, minute=0)
+			if 'all' in process_params:
+				end_date = Datetime.now()# Until now
+			else:
+				end_date = begin_date + relativedelta(months=1)
+			process_logger.info(2*LOG_INDENT + 'Forcing ' + str(begin_date) + ' as begin date')
+			process_logger.info(2*LOG_INDENT + 'Forcing ' + str(end_date) + ' as end date')
 		# year =  str(Datetime.now().year)
 		# months = _Utilities.get_current_fiscal_declaration_period(_Constants.TWO_MONTHS_PERIOD)
 		# begin_date = Datetime(int(year),int(months[0]),1)# Since previous month (optimization introduced on Sep 8, 2015)
 		begin_date = begin_date.replace(hour=0, minute=0)
-		end_date = Datetime.now()# Until now
+		if not forcing_period:
+			end_date = Datetime.now()# Until now
 		process_logger.info(2*LOG_INDENT + 'Equalizing dbs from ' + str(begin_date) + ' to ' + str(end_date))
 		# Get CFDIs from Forest DB:
 		cfdis_in_forest_db_count = _Utilities.get_cfdis_count_in_forest_for_this_taxpayer_at_period(taxpayer,begin_date,end_date)
@@ -198,6 +217,10 @@ def equalize_dbs_for_a_taxpayer(taxpayer=None,process_logger=None):
 			process_logger.info(2*LOG_INDENT + 'Equalization Summary: ')
 			process_logger.info(3*LOG_INDENT + 'CFDIs stored in CB  -> ' + str(log['after']['stored']))
 			process_logger.info(3*LOG_INDENT + 'Errors occurred     -> ' + str(log['after']['errors']))
+		if forcing_execution:
+			process_logger.info(3*LOG_INDENT + 'Sending telegram notification ... ')
+			message = 'Ya iguale a este bato: ' + taxpayer['identifier']
+			_Utilities.send_message_to_forest_telegram_contacts(message,logger=process_logger)
 		return log
 	except Already_Handled_Exception as already_handled_exception:
 		raise already_handled_exception

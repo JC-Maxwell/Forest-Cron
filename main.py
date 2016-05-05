@@ -8,6 +8,7 @@
 # ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝
                                                                                                                 
 # Description: contains Forest-Cron main function (from here croning processes are spawn)
+# Example of params: sudo python main.py -n "initialization" -p '{"identifiers":["hola","mundo"]}'
 
 # ======================================================== DEPENDENCIES
 
@@ -109,17 +110,27 @@ def get_command_line_params(argv):
 				process_name = arg
 			elif opt in ("-p", "--process_params"):
 				cron_logger.debug(' - process_params option found ... ')
-				process_params = json.loads(arg)
+				try:
+					process_params = json.loads(arg)
+				except Exception as e:
+					error_message = 'Invalid params, check your json. It must be like this: -p \'{\"hola\":\"mundo\"}\''
+					print error_message
+					cron_logger.critical(error_message)
+					sys.exit()
 			elif opt in ("-d", "--debug"):
 				cron_logger.debug(' - debug option found ... ')
 				debug_execution = True
 		if process_name != '':
 			cron_logger.debug(' - Building process ... ')
-			process = {
-				'name' : process_name,
-				'params' : process_params,
-				'debug' : debug_execution
-			}#End of process
+			if process_name == _Constants.SL1 or process_name == _Constants.EQUALIZATION or process_name == _Constants.INITIALIZATION:
+				process = {
+					'name' : process_name,
+					'params' : process_params,
+					'debug' : debug_execution
+				}#End of process
+			else:
+				print 'Invalid process name -n'
+				sys.exit()
 			return process
 		else:
 			error_message = 'Invalid process_name or process_params'

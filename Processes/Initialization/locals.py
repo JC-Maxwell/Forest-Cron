@@ -121,7 +121,7 @@ def log_initiliazation_thread_logs_at_initialization_main_logs(initialization_ex
 # \_| |_/\__,_|_| |_|\__,_|_|\___/_/   \_|  \__,_|_|  |___/\___|  \__,_|\__,_|\__\__,_|                                                                                       
 
 # Get synchronization layer 1 data:
-def get_initialization_data(taxpayer,logger=None):
+def get_initialization_data(taxpayer,logger=None,process_params=None):
 	try:
 		initialization_data_backup = taxpayer['data']['initialization'] if 'data' in taxpayer and 'initialization' in taxpayer['data'] else {}
 		new_initialization_data = dict(initialization_data_backup)
@@ -136,6 +136,9 @@ def get_initialization_data(taxpayer,logger=None):
 			else:
 				del new_initialization_data[year]
 				year = None
+		if 'year' in process_params:
+			year = process_params['year']
+			month = process_params['month']
 		if year is None and month is None:
 			initialization_data = {
 				'initialized' : True,

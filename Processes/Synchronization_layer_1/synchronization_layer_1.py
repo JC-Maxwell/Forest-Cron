@@ -53,6 +53,7 @@ def excute_synchronization_layer_1(taxpayers,shared_variables):# Taxpayers are t
 		current_taxpayer = shared_variables['current_taxpayer']
 		total_taxpayers = shared_variables['total_taxpayers']
 		current_table_row = shared_variables['current_table_row']
+		forcing_execution = shared_variables['forcing_execution']
 		lock = shared_variables['lock']
 		# Process:
 		process_name = multiprocessing.current_process().name
@@ -69,13 +70,15 @@ def excute_synchronization_layer_1(taxpayers,shared_variables):# Taxpayers are t
 		# Synchronization layer 1 data:
 		sl1_data = _Locals.get_synchronization_layer_1_data(logger=process_logger)
 		taxpayers_synchronized_counter = 0
+		process_logger.info(LOG_INDENT + 'Forcing execution: ' + str(forcing_execution))
 		process_logger.info(LOG_INDENT + 'Taxpayers: ' + str(total_taxpayers_for_this_subprocess))
 		for taxpayer in taxpayers:
-			_Utilities.update_current_taxpayer(_Constants.SL1,taxpayer['identifier'],current_taxpayer.value+1,logger=process_logger)
+			if not forcing_execution:
+				_Utilities.update_current_taxpayer(_Constants.SL1,taxpayer['identifier'],current_taxpayer.value+1,logger=process_logger)
 			percentage_of_synchronization_done = _Utilities.get_process_percentage_done(taxpayers_synchronized_counter,total_taxpayers_for_this_subprocess)
 			taxpayers_synchronized_counter = taxpayers_synchronized_counter + 1# Specific taxpayers (this thread's counter)
 			process_logger.info(LOG_INDENT + '-> (' + str(taxpayers_synchronized_counter) + '/' + str(total_taxpayers_for_this_subprocess)  + ') ' + taxpayer['identifier'] + ' --- ' + percentage_of_synchronization_done)
-			sl1_execution_data = excute_synchronization_layer_1_for_taxpayer(taxpayer=taxpayer,sl1_data=sl1_data,process_logger=process_logger)
+			sl1_execution_data = excute_synchronization_layer_1_for_taxpayer(forcing_execution=forcing_execution,taxpayer=taxpayer,sl1_data=sl1_data,process_logger=process_logger)
 			with lock:
 				current_taxpayer.value = current_taxpayer.value + 1
 			current_date = Datetime.now()
@@ -124,7 +127,7 @@ def excute_synchronization_layer_1(taxpayers,shared_variables):# Taxpayers are t
 		raise already_handled_exception
 
 # Contains synchronization_layer_1 process for a single taxpayer:
-def excute_synchronization_layer_1_for_taxpayer(taxpayer=None,sl1_data=None,process_logger=None):
+def excute_synchronization_layer_1_for_taxpayer(forcing_execution=False,taxpayer=None,sl1_data=None,process_logger=None):
 	try:
 		sl1_execution_log = _Locals.new_synchronization_layer_1_log()
 		# Get CFDIs from DB:
@@ -196,6 +199,10 @@ def excute_synchronization_layer_1_for_taxpayer(taxpayer=None,sl1_data=None,proc
 		process_logger.info(3*LOG_INDENT + 'Pending completed:  ' + str(sl1_execution_log['forest_db']['after']['pending_completed']))
 		process_logger.info(3*LOG_INDENT + 'Pending:            ' + str(sl1_execution_log['forest_db']['after']['pending']))
 		process_logger.info(3*LOG_INDENT + 'Updated:            ' + str(sl1_execution_log['forest_db']['after']['updated']))
+		if forcing_execution:
+			process_logger.info(3*LOG_INDENT + 'Sending telegram notification ... ')
+			message = 'Ya sincronice a este bato: ' + taxpayer['identifier']
+			_Utilities.send_message_to_forest_telegram_contacts(message,logger=process_logger)
 		return sl1_execution_log
 	except Already_Handled_Exception as already_handled_exception:
 		raise already_handled_exception

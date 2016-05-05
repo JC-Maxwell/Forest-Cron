@@ -54,6 +54,11 @@ def excute_initialization(taxpayers,shared_variables):# Taxpayers are the ones s
 		current_taxpayer = shared_variables['current_taxpayer']
 		total_taxpayers = shared_variables['total_taxpayers']
 		current_table_row = shared_variables['current_table_row']
+		forcing_execution = shared_variables['forcing_execution']
+		process_params = shared_variables['process_params']
+		forcing_period = False
+		if 'year' in process_params:
+			forcing_period = True
 		lock = shared_variables['lock']
 		# Process:
 		process_name = multiprocessing.current_process().name
@@ -67,13 +72,15 @@ def excute_initialization(taxpayers,shared_variables):# Taxpayers are the ones s
 		process_logger.info(_Constants.LOG_SEPARATOR)
 		process_logger.info(INITIALIZATION_PROCESS_NAME + ' - ' + process_name.upper())
 		taxpayers_initialized_counter = 0
+		process_logger.info(LOG_INDENT + 'Forcing execution: ' + str(forcing_execution))
 		process_logger.info(LOG_INDENT + 'Taxpayers: ' + str(total_taxpayers_for_this_subprocess))
 		for taxpayer in taxpayers:
-			_Utilities.update_current_taxpayer(_Constants.INITIALIZATION,taxpayer['identifier'],current_taxpayer.value+1,logger=process_logger)
+			if not forcing_execution:
+				_Utilities.update_current_taxpayer(_Constants.INITIALIZATION,taxpayer['identifier'],current_taxpayer.value+1,logger=process_logger)
 			percentage_of_initialization_done = _Utilities.get_process_percentage_done(taxpayers_initialized_counter,total_taxpayers_for_this_subprocess)
 			taxpayers_initialized_counter = taxpayers_initialized_counter + 1# Specific taxpayers (this thread's counter)
 			process_logger.info(LOG_INDENT + '-> (' + str(taxpayers_initialized_counter) + '/' + str(total_taxpayers_for_this_subprocess)  + ') ' + taxpayer['identifier'] + ' --- ' + percentage_of_initialization_done)
-			initialization_execution_data = excute_initialization_for_taxpayer(taxpayer=taxpayer,process_logger=process_logger)
+			initialization_execution_data = excute_initialization_for_taxpayer(forcing_period=forcing_period,forcing_execution=forcing_execution,taxpayer=taxpayer,process_logger=process_logger,process_params=process_params)
 			with lock:
 				current_taxpayer.value = current_taxpayer.value + 1
 			current_date = Datetime.now()
@@ -104,7 +111,7 @@ def excute_initialization(taxpayers,shared_variables):# Taxpayers are the ones s
 			else:
 				initialization_execution_log['end'] = False
 			_Locals.log_initiliazation_thread_logs_at_initialization_main_logs(initialization_execution_log=initialization_execution_log,initialization_logger=initialization_logger,cron_logger=cron_logger)
-			if 'avoid_iteration' in initialization_execution_data and initialization_execution_data['avoid_iteration'] == True:
+			if forcing_period or ('avoid_iteration' in initialization_execution_data and initialization_execution_data['avoid_iteration'] == True):
 				process_logger.info(2*LOG_INDENT + 'NOT Updating initialization data for taxpayer ... ')
 			else:
 				process_logger.info(2*LOG_INDENT + 'Updating initialization data for taxpayer ... ')
@@ -121,14 +128,17 @@ def excute_initialization(taxpayers,shared_variables):# Taxpayers are the ones s
 		raise already_handled_exception
 
 # Contains initialization process for a single taxpayer:
-def excute_initialization_for_taxpayer(taxpayer=None,process_logger=None):
+def excute_initialization_for_taxpayer(forcing_execution=False,forcing_period=False,taxpayer=None,process_logger=None,process_params=None):
 	try:
-		initialization_data = _Locals.get_initialization_data(taxpayer,logger=process_logger)
+		process_logger.info(2*LOG_INDENT + 'Forcing period: ' + str(forcing_period))
+		initialization_data = _Locals.get_initialization_data(taxpayer,logger=process_logger,process_params=process_params)
 		initialized = initialization_data['initialized']
 		if initialized == False:
 			initialization_log = _Locals.new_initialization_log(logger=process_logger)
 			# Get CFDIs from DB:
 			process_logger.info(2*LOG_INDENT + 'RETRIEVING DATA FROM FOREST DB ... ')
+			_year = str(initialization_data['year'])
+			_month = str(initialization_data['month'])
 			process_logger.info(3*LOG_INDENT + 'Year: ' + str(initialization_data['year']) + ' Month: ' + str(initialization_data['month']))
 			process_logger.info(3*LOG_INDENT + 'From ' + str(initialization_data['begin_date']) + ' to ' + str(initialization_data['end_date']))
 			cfdis_in_db = _Utilities.get_cfdis_in_forest_for_this_taxpayer_at_period(taxpayer,initialization_data['begin_date'],initialization_data['end_date'],limit=None)
@@ -188,13 +198,17 @@ def excute_initialization_for_taxpayer(taxpayer=None,process_logger=None):
 		# Update taxpayer:
 		new_initialization_data = initialization_data['new_initialization_data']
 		initialization_result['initialized'] = initialized
-		if 'avoid_iteration' in initialization_result and initialization_result['avoid_iteration'] == True:
+		if forcing_period or ('avoid_iteration' in initialization_result and initialization_result['avoid_iteration'] == True):
 			process_logger.info(2*LOG_INDENT + 'NOT updating taxpayer initialization status ... ')
 			initialization_result['percentage_initialized'] = "--.-%"
 		else:
 			taxpayer = _Locals.update_taxpayer_initialization_status(taxpayer,new_initialization_data,logger=process_logger,initialized=initialized)
 			initialization_result['percentage_initialized'] = taxpayer['data']['percentage_initialized']
 			process_logger.info(3*LOG_INDENT + 'Percentage initialized:            ' + str(initialization_result['percentage_initialized']))
+		if forcing_execution:
+			process_logger.info(3*LOG_INDENT + 'Sending telegram notification ... ')
+			message = 'Ya inicialice a este bato: ' + taxpayer['identifier'] + ' para el periodo ' + _month + '/' + _year
+			_Utilities.send_message_to_forest_telegram_contacts(message,logger=process_logger)
 		return initialization_result
 	except Already_Handled_Exception as already_handled_exception:
 		raise already_handled_exception

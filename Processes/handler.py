@@ -109,7 +109,7 @@ def validate(process_name,mode=None,server_index=None,debug_execution=False):
 # This update is for balancing each thread in a different server (introduced on May 3rd 2016) -- each process will run in a different server --
 # Code logic was splitted in two modes in order to achieve this
 
-def execute_with_multiprocessing(process_file_name=None,default_log={},threads=1,specific_process_logger=None,cron_logger_starting_message='Process Start',process_name='PROCESS',process_instance=None,specific_shared_variables=None,taxpayers=[],mode=_Constants.BALANCER_MODE):
+def execute_with_multiprocessing(process_file_name=None,default_log={},threads=1,specific_process_logger=None,cron_logger_starting_message='Process Start',process_name='PROCESS',process_instance=None,specific_shared_variables=None,taxpayers=[],mode=_Constants.BALANCER_MODE,forcing_execution=False,process_params=None):
 	try:
 		cron_logger.info(LOG_INDENT + cron_logger_starting_message)
 		if mode == _Constants.SERVER_MODE:
@@ -124,7 +124,9 @@ def execute_with_multiprocessing(process_file_name=None,default_log={},threads=1
 		shared_variables = {
 			'current_taxpayer' : Value('i',0),
 			'total_taxpayers' : Value('i',total_taxpayers),
-			'lock' : Lock()
+			'lock' : Lock(),
+			'forcing_execution' : forcing_execution,
+			'process_params' : process_params
 		}# End of shared_variables
 		if specific_shared_variables is not None:
 			for specific_shared_variable_name in specific_shared_variables:
@@ -177,21 +179,42 @@ def execute(process):
 		start_time = time.time()
 		process_name = process['name']
 		process_params = process['params']
-		debug_execution = process['debug']
-		cron_logger.info(LOG_INDENT + 'Validating CRON Process')
-		process_availability = _Utilities.check_process_availability('cron',debug_execution=debug_execution)
-		if process_availability is not True:
-			cron_logger.info(LOG_INDENT + 'CRON is suspended')
-			suspended_at = Datetime.now()
-			_Utilities.update_cron_process_log('cron',logger=cron_logger,suspended_at=suspended_at,debug_execution=debug_execution)
-			return False
-		cron_logger.info(LOG_INDENT + 'Validating process ... ')
+		forcing_execution = False
+		forcing_identifiers = None
 		forest_mode = PROCESS_HANDLER_CONFIG['forest_mode']
 		server_index = PROCESS_HANDLER_CONFIG['server_index']# The index related to this server (in case it is configured in SERVER mode)
-		process_is_valid = validate(process_name,forest_mode,server_index,debug_execution=debug_execution)
+		if process_params is not None and 'identifiers' in process_params and process_params['identifiers'] is not None:
+			forcing_execution = True
+			forest_mode = _Constants.SERVER_MODE# Forcing is executed as server mode
+			forcing_identifiers = process_params['identifiers']
+			if _Utilities.validate_forcing_identifiers(forcing_identifiers,process_name,logger=cron_logger) is False:
+				print 'Identifiers are not valid, this means some identfiers do not exist, or, if they exist, their status is not equal to ' + process_name
+				sys.exit()
+			else:
+				print 'Identifiers are OK'
+		if (process_name == _Constants.INITIALIZATION or process_name == _Constants.EQUALIZATION) and forcing_execution:
+			if _Utilities.validate_params(process_params,logger=cron_logger) is False:
+				print 'Period params are wrong'
+				sys.exit()
+		debug_execution = process['debug']
+		if forcing_execution is False:
+			cron_logger.info(LOG_INDENT + 'Validating CRON Process')
+			process_availability = _Utilities.check_process_availability('cron',debug_execution=debug_execution)
+			if process_availability is not True:
+				cron_logger.info(LOG_INDENT + 'CRON is suspended')
+				suspended_at = Datetime.now()
+				_Utilities.update_cron_process_log('cron',logger=cron_logger,suspended_at=suspended_at,debug_execution=debug_execution)
+				return False
+			cron_logger.info(LOG_INDENT + 'Validating process ... ')
+			process_is_valid = validate(process_name,forest_mode,server_index,debug_execution=debug_execution)
+		else:
+			process_is_valid = True
+			print 'Forcing execution of ' + process_name
+			cron_logger.info(LOG_INDENT + 'Forcing execution')
 		if process_is_valid:
 			cron_logger.info(LOG_INDENT + 'Updating cron db log ... ')
-			_Utilities.update_cron_process_log(process_name,logger=cron_logger,debug_execution=debug_execution)
+			if forcing_execution is False:
+				_Utilities.update_cron_process_log(process_name,logger=cron_logger,debug_execution=debug_execution)
 			cron_logger.info(LOG_INDENT + 'Getting instance of ' + process_name)
 			# Process data:
 			SPECIFIC_PROCESS_CONFIG_DATA = PROCESS_HANDLER_CONFIG[process_name]
@@ -208,7 +231,10 @@ def execute(process):
 			cron_logger.info(LOG_INDENT + 'Getting process ' + process_name + ' at db')
 			process = _Utilities.get_db_process(process_name)
 			from_taxpayer = None
-			if debug_execution is True:
+			if forcing_identifiers is not None:
+				print 'Process will be forced for ' + str(len(forcing_identifiers))
+				cron_logger.info(LOG_INDENT + 'This process will be force for ' + str(len(forcing_identifiers)))
+			elif debug_execution is True:
 				cron_logger.info(LOG_INDENT + 'This process will run in debugging mode')
 			elif 'current_taxpayer' in process:
 				from_taxpayer = process['current_taxpayer']# If process fails or if it is stopped it will start from this taxpayer
@@ -220,14 +246,14 @@ def execute(process):
 			# Logging:
 			if debug_execution is not True:
 				cron_logger.info(LOG_INDENT + 'Logging calling at cron procesess ... ')
-				_Utilities.log_at_cron_processes(process)		
+				_Utilities.log_at_cron_processes(process)	
 			cron_logger.info(LOG_INDENT + 'Getting taxpayers for this process ... ')
-			taxpayers = _Utilities.get_taxpayers_for_a_specific_process(process_name,limit=None,from_taxpayer=from_taxpayer,logger=cron_logger,debug_execution=debug_execution,server_index=server_index,mode=forest_mode)
+			taxpayers = _Utilities.get_taxpayers_for_a_specific_process(process_name,forcing_identifiers=forcing_identifiers,limit=None,from_taxpayer=from_taxpayer,logger=cron_logger,debug_execution=debug_execution,server_index=server_index,mode=forest_mode)
 			# Set unavailable:
-			if forest_mode == _Constants.SERVER_MODE:
+			if forest_mode == _Constants.SERVER_MODE and forcing_execution is False:
 				cron_logger.info(2*LOG_INDENT + 'Setting server ' + str(server_index) + ' unavailable for ' + process_name)
 				_Utilities.set_process_server_unavailable(process_name,server_index,logger=cron_logger)
-			elif forest_mode == _Constants.BALANCER_MODE:
+			elif forest_mode == _Constants.BALANCER_MODE and forcing_execution is False:
 				cron_logger.info(LOG_INDENT + 'Setting process ' + process_name + ' unavailable')
 				process_availability = _Utilities.set_process_unavailable(process_name,taxpayers=taxpayers,logger=cron_logger,debug_execution=debug_execution,threads=threads)
 				cron_logger.info(LOG_INDENT + process_name + ' availability: ' + str(process_availability))
@@ -243,13 +269,16 @@ def execute(process):
 				return
 			cron_logger.info(2*LOG_INDENT + 'Taxpayers:    ' + str(len(taxpayers)))
 			cron_logger.info(2*LOG_INDENT + 'Params:       ' + str(process_params))
-			execute_with_multiprocessing(process_file_name=process_file_name,specific_process_logger=specific_process_logger,default_log=default_log,cron_logger_starting_message=cron_logger_starting_message,process_name=process_name,process_instance=process_instance,threads=threads,specific_shared_variables=specific_shared_variables,taxpayers=taxpayers,mode=forest_mode)
+			if forcing_execution:
+				cron_logger.info(LOG_INDENT + 'Execution forced successfully')
+				print 'Performing ' + process_name + ' ... If you wish to check progress go to the log files'
+			execute_with_multiprocessing(process_file_name=process_file_name,specific_process_logger=specific_process_logger,default_log=default_log,cron_logger_starting_message=cron_logger_starting_message,process_name=process_name,process_instance=process_instance,threads=threads,specific_shared_variables=specific_shared_variables,taxpayers=taxpayers,mode=forest_mode,forcing_execution=forcing_execution,process_params=process_params)
 			end_time = time.time()
 			process_duration = (end_time - start_time)/3600# in hours
 			log_process_duration = False
 			if len(taxpayers) > 0:
 				log_process_duration = True
-			if forest_mode == _Constants.SERVER_MODE:
+			if forest_mode == _Constants.SERVER_MODE and not forcing_execution:
 				cron_logger.info(2*LOG_INDENT + 'Setting server ' + str(server_index) + ' available for ' + process_name)
 				_Utilities.set_process_server_available(process_name,server_index,logger=cron_logger)
 				# BALANCER MODE is set available once all servers are available:
@@ -258,6 +287,11 @@ def execute(process):
 				if all_servers_are_available:
 					cron_logger.info(2*LOG_INDENT + 'Setting process available for ' + process_name)
 					_Utilities.set_process_available(process_name,process_duration=process_duration,logger=cron_logger,log_process_duration=log_process_duration,debug_execution=debug_execution)
+			if forcing_execution:
+				cron_logger.info(LOG_INDENT + 'Execution forced successfully')
+				print 'Execution forced successfully'
+				print 'Your awesome! :)'
+				return
 			if process_name == _Constants.EQUALIZATION:
 				cron_logger.info(2*LOG_INDENT + 'Setting process available for ' + process_name)
 				_Utilities.set_process_available(process_name,process_duration=process_duration,logger=cron_logger,log_process_duration=log_process_duration,debug_execution=debug_execution)
