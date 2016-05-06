@@ -72,12 +72,29 @@ def excute_synchronization_layer_1(taxpayers,shared_variables):# Taxpayers are t
 		taxpayers_synchronized_counter = 0
 		process_logger.info(LOG_INDENT + 'Forcing execution: ' + str(forcing_execution))
 		process_logger.info(LOG_INDENT + 'Taxpayers: ' + str(total_taxpayers_for_this_subprocess))
-		for taxpayer in taxpayers:
+		for taxpayer in taxpayers:			
 			if not forcing_execution:
 				_Utilities.update_current_taxpayer(_Constants.SL1,taxpayer['identifier'],current_taxpayer.value+1,logger=process_logger)
 			percentage_of_synchronization_done = _Utilities.get_process_percentage_done(taxpayers_synchronized_counter,total_taxpayers_for_this_subprocess)
 			taxpayers_synchronized_counter = taxpayers_synchronized_counter + 1# Specific taxpayers (this thread's counter)
 			process_logger.info(LOG_INDENT + '-> (' + str(taxpayers_synchronized_counter) + '/' + str(total_taxpayers_for_this_subprocess)  + ') ' + taxpayer['identifier'] + ' --- ' + percentage_of_synchronization_done)
+			# ----- Improve: just if proccess goes down the taxpayers already synchronized (last 12 hours) are skipped
+			last_sl1 = taxpayer['last_sl1']
+			today = Datetime.now()
+			current_hour = today.hour
+			hour = 0
+			if current_hour > 12:
+				hour = 12
+			today = today.replace(hour=hour,minute=0,second=0)
+			process_logger.info(2*LOG_INDENT + 'Last SL1 done at: ' + str(last_sl1))
+			process_logger.info(2*LOG_INDENT + 'Today date:       ' + str(today))
+			process_logger.info(2*LOG_INDENT + 'Comparing dates ... ')
+			if last_sl1 >= today:
+				process_logger.info(2*LOG_INDENT + 'Sync is up to date, this taxpayer will be skipped')
+				continue
+			else:
+				process_logger.info(2*LOG_INDENT + 'Sync is NOT up to date, this taxpayer will continue ... ')
+			# ----- 
 			sl1_execution_data = excute_synchronization_layer_1_for_taxpayer(forcing_execution=forcing_execution,taxpayer=taxpayer,sl1_data=sl1_data,process_logger=process_logger)
 			with lock:
 				current_taxpayer.value = current_taxpayer.value + 1
@@ -201,7 +218,7 @@ def excute_synchronization_layer_1_for_taxpayer(forcing_execution=False,taxpayer
 		process_logger.info(3*LOG_INDENT + 'Updated:            ' + str(sl1_execution_log['forest_db']['after']['updated']))
 		if forcing_execution:
 			process_logger.info(3*LOG_INDENT + 'Sending telegram notification ... ')
-			message = 'Ya sincronice a este bato: ' + taxpayer['identifier']
+			message = 'Ya sincronice a este vato: ' + taxpayer['identifier']
 			_Utilities.send_message_to_forest_telegram_contacts(message,logger=process_logger)
 		return sl1_execution_log
 	except Already_Handled_Exception as already_handled_exception:

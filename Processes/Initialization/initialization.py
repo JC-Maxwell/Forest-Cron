@@ -207,7 +207,7 @@ def excute_initialization_for_taxpayer(forcing_execution=False,forcing_period=Fa
 			process_logger.info(3*LOG_INDENT + 'Percentage initialized:            ' + str(initialization_result['percentage_initialized']))
 		if forcing_execution:
 			process_logger.info(3*LOG_INDENT + 'Sending telegram notification ... ')
-			message = 'Ya inicialice a este bato: ' + taxpayer['identifier'] + ' para el periodo ' + _month + '/' + _year
+			message = 'Ya inicialice a este vato: ' + taxpayer['identifier'] + ' para el periodo ' + _month + '/' + _year
 			_Utilities.send_message_to_forest_telegram_contacts(message,logger=process_logger)
 		return initialization_result
 	except Already_Handled_Exception as already_handled_exception:

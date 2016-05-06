@@ -219,7 +219,7 @@ def equalize_dbs_for_a_taxpayer(forcing_period=False,forcing_execution=None,taxp
 			process_logger.info(3*LOG_INDENT + 'Errors occurred     -> ' + str(log['after']['errors']))
 		if forcing_execution:
 			process_logger.info(3*LOG_INDENT + 'Sending telegram notification ... ')
-			message = 'Ya iguale a este bato: ' + taxpayer['identifier']
+			message = 'Ya iguale a este vato: ' + taxpayer['identifier']
 			_Utilities.send_message_to_forest_telegram_contacts(message,logger=process_logger)
 		return log
 	except Already_Handled_Exception as already_handled_exception:

@@ -290,7 +290,7 @@ def execute(process):
 			if forcing_execution:
 				cron_logger.info(LOG_INDENT + 'Execution forced successfully')
 				print 'Execution forced successfully'
-				print 'Your awesome! :)'
+				print 'You are awesome! :)'
 				return
 			if process_name == _Constants.EQUALIZATION:
 				cron_logger.info(2*LOG_INDENT + 'Setting process available for ' + process_name)
