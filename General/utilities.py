@@ -418,14 +418,17 @@ def get_taxpayers_for_a_specific_process(process_name,forcing_identifiers=None,l
 	try:
 		process_name_filter = FILTERS_BY_PROCESS_NAMES[process_name]
 		if debug_execution is True:
-			logger.info(LOG_INDENT + 'Retrieving debug taxpayers for ' + process_name + ' process')
+			if logger is not None:
+				logger.info(LOG_INDENT + 'Retrieving debug taxpayers for ' + process_name + ' process')
 			process_name_filter['debug'] = True
 		if process_name == 'equalization' or process_name == 'synchronization_layer_1':
 			last_session_lower_limit = datetime.datetime.now() - relativedelta(months=2)
-			logger.info(LOG_INDENT + 'Adding last session filter to ' + str(last_session_lower_limit))
+			if logger is not None:
+				logger.info(LOG_INDENT + 'Adding last session filter to ' + str(last_session_lower_limit))
 			process_name_filter['last_session'] = { '$gt' : last_session_lower_limit }
 		if forcing_identifiers is not None:
-			logger.info(LOG_INDENT + 'Adding forcing taxpayers filter')
+			if logger is not None:
+				logger.info(LOG_INDENT + 'Adding forcing taxpayers filter')
 			process_name_filter['identifier'] = {
 				'$in' : forcing_identifiers
 			}#End of forcing_identifiers
@@ -437,7 +440,8 @@ def get_taxpayers_for_a_specific_process(process_name,forcing_identifiers=None,l
 			db_taxpayers = db_Taxpayer.find(process_name_filter).sort('created_at',1)
 		taxpayers = []
 		from_taxpayer = None#from taxpayer was deprecated in multi-server version 0.1 (may 4 2016)
-		logger.info(LOG_INDENT + 'From taxpayer is DEPRECATED')	
+		if logger is not None:
+			logger.info(LOG_INDENT + 'From taxpayer is DEPRECATED')	
 		if from_taxpayer is not None:
 			from_here = False
 			for db_taxpayer in db_taxpayers:
@@ -453,22 +457,28 @@ def get_taxpayers_for_a_specific_process(process_name,forcing_identifiers=None,l
 			for db_taxpayer in db_taxpayers:
 				taxpayer = create_new_taxpayer(db_taxpayer,logger=logger)
 				taxpayers.append(taxpayer)
-		logger.info(LOG_INDENT + 'Total taxpayers: ' + str(len(taxpayers)))	
+		if logger is not None:
+			logger.info(LOG_INDENT + 'Total taxpayers: ' + str(len(taxpayers)))	
 		if forcing_identifiers is not None:
-			logger.info(LOG_INDENT + 'Forcing execution will not be filtered')
+			if logger is not None:
+				logger.info(LOG_INDENT + 'Forcing execution will not be filtered')
 			return taxpayers
 		# In balancer mode all taxpayers must be retrieved, they are just filtered if process is in server mode
 		if mode is not _Constants.BALANCER_MODE and server_index is not None and process_name is not _Constants.EQUALIZATION:# Once taxpayers were retrieved and filtered according to "from_taxpayer" param they are filtered by server index, Equalization process only runs at BALANCER mode (in balancer server)
-			logger.info(LOG_INDENT + 'Total taxpayers pending: ' + str(len(taxpayers)))	
-			logger.info(LOG_INDENT + 'Filtering for server: ' + str(server_index))
+			if logger is not None:
+				logger.info(LOG_INDENT + 'Total taxpayers pending: ' + str(len(taxpayers)))	
+			if logger is not None:
+				logger.info(LOG_INDENT + 'Filtering for server: ' + str(server_index))
 			server_taxpayers = []
 			for taxpayer in taxpayers:
 				if 'server_index' in taxpayer and taxpayer['server_index'] == server_index:
 					server_taxpayers.append(taxpayer)
-			logger.info(LOG_INDENT + 'Total taxpayers pending on this server: ' + str(len(server_taxpayers)))
+			if logger is not None:
+				logger.info(LOG_INDENT + 'Total taxpayers pending on this server: ' + str(len(server_taxpayers)))
 			taxpayers = server_taxpayers
 		if process_name is _Constants.EQUALIZATION:
-			logger.info(LOG_INDENT + 'Equalization process will not be filtered')
+			if logger is not None:
+				logger.info(LOG_INDENT + 'Equalization process will not be filtered')
 		return taxpayers
 	except Exception as e:
 		# sl1_logger.critical(e.message)
@@ -1178,10 +1188,20 @@ def get_chat_ids(logger=None):
 				chat_id = str(item['message']['chat']['id'])
 				if not chat_id in chat_ids:
 					chat_ids[chat_id] = True
+		process = get_db_process('supervisor',logger=logger)
+		db_chat_ids = process['chat_ids']
+		for chat_id in db_chat_ids:
+			chat_id = str(chat_id)
+			if not chat_id in chat_ids:
+				chat_ids[chat_id] = True
 		chats = []
 		for chat_id in chat_ids:
 			chat = int(chat_id)
 			chats.append(chat)
+		forest_db = set_connection_to_forest_db()
+		db_Process = forest_db['Process']
+		process['chat_ids'] = chats
+		db_Process.save(process)
 		return chats
 	except Exception as e:
 		print e
@@ -1189,7 +1209,9 @@ def get_chat_ids(logger=None):
 def send_message_to_forest_telegram_contacts(message,logger=None):
 	chat_ids = get_chat_ids(logger=logger)
 	for chat_id in chat_ids:
-		logger.info(3*LOG_INDENT + 'Chat id -> ' + str(chat_id))
+		if logger is not None:
+			logger.info(3*LOG_INDENT + 'Chat id -> ' + str(chat_id))
+			print chat_id
 		telegram_forest_bot.sendMessage(chat_id=chat_id,text=message)
 
 
