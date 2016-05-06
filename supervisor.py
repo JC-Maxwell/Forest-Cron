@@ -8,6 +8,7 @@ import multiprocessing
 import getopt
 from datetime import datetime as Datetime
 from dateutil.relativedelta import *
+import telegram
 
 # Load SDK:
 pauli_storage_path = '/usr/local/lib'
@@ -81,6 +82,9 @@ def is_everything_ok(log_date):
 		everything_ok = True
 	return everything_ok
 
+CHANGITO = '\xF0\x9F\x99\x88'
+HAPPY_FACE = '\xF0\x9F\x98\x83'
+
 def main():
 	cron_logger = _Utilities.setup_logger('cron')
 	cron_logger.info('------------------------------------------------------------------------')
@@ -99,20 +103,15 @@ def main():
 		everything_ok = is_everything_ok(last_log_date)	
 		cron_logger.info(LOG_INDENT + process.upper())
 		if everything_ok:
-			message = 'Todo chido con ' + process + ' en el servidor Forest_' + str(SERVER_INDEX) + '. Tengo el ultimo registro a las ' + str(last_log_date)
+			message = 3*HAPPY_FACE + 'Todo chido con ' + process + ' en Forest_' + str(SERVER_INDEX) + '. Tengo el ultimo registro a las ' + str(last_log_date)
 			cron_logger.info(2*LOG_INDENT + 'Everyting ok. Last log was at: ' + str(last_log_date))
 			_Utilities.send_message_to_forest_telegram_contacts(message)
 		else:
-			message = 'Hay un problema con ' + process + ' en el servidor Forest_' + str(SERVER_INDEX) + '. El ultimo registro a las ' + str(last_log_date)
+			message = 'Tengo un ' + 3*telegram.Emoji.PILE_OF_POO + 2*CHANGITO + ' en Forest_' + str(SERVER_INDEX) + '. El ultimo registro a las ' + str(last_log_date)
 			cron_logger.info(2*LOG_INDENT + 'There is a PROBLEM. Last log was at: ' + str(last_log_date))
 			_Utilities.send_message_to_forest_telegram_contacts(message)
 
 main()
-
-
-
-
-
 
 
 
