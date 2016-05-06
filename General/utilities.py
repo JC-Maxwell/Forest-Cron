@@ -1206,8 +1206,35 @@ def get_chat_ids(logger=None):
 	except Exception as e:
 		print e
 
-def send_message_to_forest_telegram_contacts(message,logger=None):
-	chat_ids = get_chat_ids(logger=logger)
+def hey(logger=None):
+	process = get_db_process('supervisor',logger=logger)
+	forest_db = set_connection_to_forest_db()
+	db_Process = forest_db['Process']
+	if not 'messages' in process:
+		process['messages'] = {}
+	messages_length = len(process['messages'])
+	if messages_length > 20:
+		process['messages'] = {}
+	db_Process.save(process)
+	hey = False
+	updates = telegram_forest_bot.getUpdates()
+	for item in updates:
+		if item['message'] and item['message']['text']:
+			text = item['message']['text']
+			text = text.lower()
+			if 'hey' in text:
+				message_id = item['message']['message_id']
+				chat_id = item['message']['chat']['id']
+				key = text + ' ' + str(message_id) + ' ' + str(chat_id)			
+				if not key in process['messages']:
+					process['messages'][key] = True
+					db_Process.save(process)
+					return chat_id
+	return False
+
+def send_message_to_forest_telegram_contacts(message,chat_ids=None,logger=None):
+	if chat_ids is None:
+		chat_ids = get_chat_ids(logger=logger)
 	for chat_id in chat_ids:
 		if logger is not None:
 			logger.info(3*LOG_INDENT + 'Chat id -> ' + str(chat_id))

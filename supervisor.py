@@ -87,6 +87,13 @@ HAPPY_FACE = '\xF0\x9F\x98\x83'
 
 def main():
 	cron_logger = _Utilities.setup_logger('cron')
+	current_hour = Datetime.now().hour
+	chat_id = None
+	if current_hour != 8 and current_hour != 16:
+		hey = _Utilities.hey(logger=cron_logger)
+		if hey is False:
+			return
+		chat_id = hey
 	cron_logger.info('------------------------------------------------------------------------')
 	cron_logger.info(LOG_INDENT + 'Performing Forest Supervision')
 	processes = get_processes_in_this_mode()
@@ -105,11 +112,17 @@ def main():
 		if everything_ok:
 			message = 3*HAPPY_FACE + 'Todo chido con ' + process + ' en Forest_' + str(SERVER_INDEX) + '. Tengo el ultimo registro a las ' + str(last_log_date)
 			cron_logger.info(2*LOG_INDENT + 'Everyting ok. Last log was at: ' + str(last_log_date))
-			_Utilities.send_message_to_forest_telegram_contacts(message)
+			if chat_id is not None:
+				_Utilities.send_message_to_forest_telegram_contacts(message,chat_ids=[chat_id])
+			else:
+				_Utilities.send_message_to_forest_telegram_contacts(message)
 		else:
 			message = 'Tengo un ' + 3*telegram.Emoji.PILE_OF_POO + 2*CHANGITO + ' en Forest_' + str(SERVER_INDEX) + '. El ultimo registro a las ' + str(last_log_date)
 			cron_logger.info(2*LOG_INDENT + 'There is a PROBLEM. Last log was at: ' + str(last_log_date))
-			_Utilities.send_message_to_forest_telegram_contacts(message)
+			if chat_id is not None:
+				_Utilities.send_message_to_forest_telegram_contacts(message,chat_ids=[chat_id])
+			else:
+				_Utilities.send_message_to_forest_telegram_contacts(message)
 
 main()
 
