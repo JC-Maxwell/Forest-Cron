@@ -54,6 +54,6 @@ initialization = {
 			'percentage_initialized' : '% Initialized'
 		}
 	},# End of logging
-	'threads' : 1
+	'threads' : 2
 }# End of initialization
 

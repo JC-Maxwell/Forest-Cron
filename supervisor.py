@@ -124,16 +124,25 @@ def main(argv):
 			last_log_date = get_last_log_time_of_a_process(process)		
 		everything_ok = is_everything_ok(last_log_date)	
 		cron_logger.info(LOG_INDENT + process.upper())
+		current_date = Datetime.now()
+		year = current_date.year
+		month = current_date.month
+		day = current_date.day
+		begin_of_the_day = Datetime(year,month,day)		
+		if last_log_date > begin_of_the_day:
+			last_log_date_hour = str(last_log_date)[11:11+8]
+		else:
+			last_log_date_hour = str(last_log_date)
 		if everything_ok:
-			message = 3*HAPPY_FACE + 'Todo chido con ' + process + ' en Forest_' + str(SERVER_INDEX) + '. Tengo el ultimo registro a las ' + str(last_log_date)
-			cron_logger.info(2*LOG_INDENT + 'Everyting ok. Last log was at: ' + str(last_log_date))
+			message = 3*HAPPY_FACE + 'Todo chido con ' + process + ' en Forest_' + str(SERVER_INDEX) + '. Tengo el ultimo registro a las ' + str(last_log_date_hour)
+			cron_logger.info(2*LOG_INDENT + 'Everyting ok. Last log was at: ' + str(last_log_date_hour))
 			if chat_id is not None:
 				_Utilities.send_message_to_forest_telegram_contacts(message,chat_ids=[chat_id])
 			else:
 				_Utilities.send_message_to_forest_telegram_contacts(message)
 		else:
-			message = 'Tengo un ' + 3*telegram.Emoji.PILE_OF_POO + 2*CHANGITO + ' en Forest_' + str(SERVER_INDEX) + '. El ultimo registro a las ' + str(last_log_date)
-			cron_logger.info(2*LOG_INDENT + 'There is a PROBLEM. Last log was at: ' + str(last_log_date))
+			message = 'Tengo un ' + 3*telegram.Emoji.PILE_OF_POO + 2*CHANGITO + ' en Forest_' + str(SERVER_INDEX) + '. El ultimo registro a las ' + str(last_log_date_hour)
+			cron_logger.info(2*LOG_INDENT + 'There is a PROBLEM. Last log was at: ' + str(last_log_date_hour))
 			if chat_id is not None:
 				_Utilities.send_message_to_forest_telegram_contacts(message,chat_ids=[chat_id])
 			else:
