@@ -105,6 +105,9 @@ def main(argv):
 	current_hour = Datetime.now().hour
 	chat_id = None
 	if hey_execution:
+		message = HAPPY_FACE + ' Ya acabe de sincronizar a todos los contribuyentes carnal y va de nuez'
+		_Utilities.send_message_to_forest_telegram_contacts(message)
+		return
 		hey = _Utilities.hey(logger=cron_logger,server_index=SERVER_INDEX)
 		if hey is False:
 			return
@@ -134,14 +137,14 @@ def main(argv):
 		else:
 			last_log_date_hour = str(last_log_date)
 		if everything_ok:
-			message = 3*HAPPY_FACE + 'Todo chido con ' + process + ' en Forest_' + str(SERVER_INDEX) + '. Tengo el ultimo registro a las ' + str(last_log_date_hour)
+			message = HAPPY_FACE + 'Todo chido con ' + process + ' en Forest_' + str(SERVER_INDEX) + '. Tengo el ultimo registro a las ' + str(last_log_date_hour)
 			cron_logger.info(2*LOG_INDENT + 'Everyting ok. Last log was at: ' + str(last_log_date_hour))
 			if chat_id is not None:
 				_Utilities.send_message_to_forest_telegram_contacts(message,chat_ids=[chat_id])
 			else:
 				_Utilities.send_message_to_forest_telegram_contacts(message)
 		else:
-			message = 'Tengo un ' + 3*telegram.Emoji.PILE_OF_POO + 2*CHANGITO + ' en Forest_' + str(SERVER_INDEX) + '. El ultimo registro a las ' + str(last_log_date_hour)
+			message = 'Tengo un ' + 3*telegram.Emoji.PILE_OF_POO + 1*CHANGITO + ' en Forest_' + str(SERVER_INDEX) + '. El ultimo registro a las ' + str(last_log_date_hour)
 			cron_logger.info(2*LOG_INDENT + 'There is a PROBLEM. Last log was at: ' + str(last_log_date_hour))
 			if chat_id is not None:
 				_Utilities.send_message_to_forest_telegram_contacts(message,chat_ids=[chat_id])

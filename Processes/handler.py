@@ -286,6 +286,9 @@ def execute(process):
 				cron_logger.info(2*LOG_INDENT + 'All servers availability ' + str(all_servers_are_available))
 				if all_servers_are_available:
 					cron_logger.info(2*LOG_INDENT + 'Setting process available for ' + process_name)
+					if process_name == _Constants.SL1:
+						message = HAPPY_FACE + 'Ya acabe de sincronizar a todos los contribuyentes carnal y va de nuez'
+						_Utilities.send_message_to_forest_telegram_contacts(message)
 					_Utilities.set_process_available(process_name,process_duration=process_duration,logger=cron_logger,log_process_duration=log_process_duration,debug_execution=debug_execution)
 			if forcing_execution:
 				cron_logger.info(LOG_INDENT + 'Execution forced successfully')

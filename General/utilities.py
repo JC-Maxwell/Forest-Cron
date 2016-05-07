@@ -1213,7 +1213,7 @@ def hey(logger=None,server_index=None):
 	if not 'messages' in process:
 		process['messages'] = {}
 	messages_length = len(process['messages'])
-	if messages_length > 20:
+	if messages_length > 100:
 		process['messages'] = {}
 	db_Process.save(process)
 	hey = False
