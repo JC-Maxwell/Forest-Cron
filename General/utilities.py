@@ -1207,7 +1207,7 @@ def get_chat_ids(logger=None):
 		print e
 
 def hey(logger=None):
-	process = get_db_process('supervisor',logger=logger)
+	process = get_db_process('supervisor',logger=logger,server_index=None)
 	forest_db = set_connection_to_forest_db()
 	db_Process = forest_db['Process']
 	if not 'messages' in process:
@@ -1225,7 +1225,9 @@ def hey(logger=None):
 			if 'hey' in text:
 				message_id = item['message']['message_id']
 				chat_id = item['message']['chat']['id']
-				key = text + ' ' + str(message_id) + ' ' + str(chat_id)			
+				key = text + ' ' + str(message_id) + ' ' + str(chat_id)
+				if server_index is not None:
+					key = key + ' ' + str(server_index)	
 				if not key in process['messages']:
 					process['messages'][key] = True
 					db_Process.save(process)

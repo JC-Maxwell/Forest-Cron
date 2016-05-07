@@ -105,7 +105,7 @@ def main(argv):
 	current_hour = Datetime.now().hour
 	chat_id = None
 	if hey_execution:
-		hey = _Utilities.hey(logger=cron_logger)
+		hey = _Utilities.hey(logger=cron_logger,server_index=SERVER_INDEX)
 		if hey is False:
 			return
 		chat_id = hey
