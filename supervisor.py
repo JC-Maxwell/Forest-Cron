@@ -105,9 +105,6 @@ def main(argv):
 	current_hour = Datetime.now().hour
 	chat_id = None
 	if hey_execution:
-		message = HAPPY_FACE + ' Ya acabe de sincronizar a todos los contribuyentes carnal y va de nuez'
-		_Utilities.send_message_to_forest_telegram_contacts(message)
-		return
 		hey = _Utilities.hey(logger=cron_logger,server_index=SERVER_INDEX)
 		if hey is False:
 			return
