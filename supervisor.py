@@ -85,11 +85,26 @@ def is_everything_ok(log_date):
 CHANGITO = '\xF0\x9F\x99\x88'
 HAPPY_FACE = '\xF0\x9F\x98\x83'
 
-def main():
+def get_command_line_params(argv):
+	hey = False
+	try:
+		opts, args = getopt.getopt(argv,"hn:p:d",["process_name=","process_params=","debug="])
+	except Exception as e:
+		error_message = e.message
+		print error_message
+		sys.exit()
+	for opt, arg in opts:
+		if opt == '-h':
+			hey = True
+			break
+	return hey
+
+def main(argv):
+	hey_execution = get_command_line_params(argv)
 	cron_logger = _Utilities.setup_logger('cron')
 	current_hour = Datetime.now().hour
 	chat_id = None
-	if current_hour != 8 and current_hour != 16:
+	if hey_execution:
 		hey = _Utilities.hey(logger=cron_logger)
 		if hey is False:
 			return
@@ -124,7 +139,7 @@ def main():
 			else:
 				_Utilities.send_message_to_forest_telegram_contacts(message)
 
-main()
+main(sys.argv[1:])
 
 
 
