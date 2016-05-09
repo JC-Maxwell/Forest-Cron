@@ -89,7 +89,9 @@ def excute_synchronization_layer_1(taxpayers,shared_variables):# Taxpayers are t
 			process_logger.info(2*LOG_INDENT + 'Last SL1 done at: ' + str(last_sl1))
 			process_logger.info(2*LOG_INDENT + 'Today date:       ' + str(today))
 			process_logger.info(2*LOG_INDENT + 'Comparing dates ... ')
-			if last_sl1 >= today:
+			if last_sl1 is None:
+				process_logger.info(2*LOG_INDENT + 'Sync is NEW, this taxpayer will continue ... ')
+			elif last_sl1 >= today:
 				process_logger.info(2*LOG_INDENT + 'Sync is up to date, this taxpayer will be skipped')
 				continue
 			else:
@@ -190,8 +192,12 @@ def excute_synchronization_layer_1_for_taxpayer(forcing_execution=False,taxpayer
 					_Locals.set_xml_to_pending_cfdi(cfdi_with_missing_xml,logger=process_logger,sl1_execution_log=sl1_execution_log)
 					process_logger.info(3*LOG_INDENT + str(n) + '. ' + uuid + ' completed in Forest DB')
 			else:# Completely new ones:
-				_Utilities.create_cfdi(new_cfdi,logger=process_logger,log=sl1_execution_log)
-				process_logger.info(3*LOG_INDENT + str(n) + '. ' + uuid + ' stored in Forest DB')
+				try:
+					_Utilities.create_cfdi(new_cfdi,logger=process_logger,log=sl1_execution_log)
+					process_logger.info(3*LOG_INDENT + str(n) + '. ' + uuid + ' stored in Forest DB')
+				except Exception as e:
+					process_logger.info(3*LOG_INDENT + str(n) + '. Exception catched with this one')
+					process_logger.info(str(e))
 		# Update Forest DB -> JUST UPDATING:
 		process_logger.info(2*LOG_INDENT + 'UPDATING FOREST DB (updating existing CFDIs) ... ')
 		cfdis_in_db = _Utilities.get_cfdis_in_forest_for_this_taxpayer_at_period(taxpayer,sl1_data['begin_date'],sl1_data['end_date'])# Get cfdis for updating data (They must be retrieved again due to cursor invalidation problems):
