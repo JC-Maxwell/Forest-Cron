@@ -832,6 +832,7 @@ def set_process_unavailable(process_name,taxpayers=[],logger=None,db_Process=Non
 				process['servers'] = threads
 		process['total_taxpayers'] = len(taxpayers)
 		process['percentage_done'] = '0.00%'
+		logger.info(process)
 		db_Process.save(process)
 		if debug_execution:
 			process_availability = False# Just to seem it was set unavailable

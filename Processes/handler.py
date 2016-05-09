@@ -254,7 +254,7 @@ def execute(process):
 				cron_logger.info(2*LOG_INDENT + 'Setting server ' + str(server_index) + ' unavailable for ' + process_name)
 				_Utilities.set_process_server_unavailable(process_name,server_index,logger=cron_logger)
 			elif forest_mode == _Constants.BALANCER_MODE and forcing_execution is False:
-				cron_logger.info(LOG_INDENT + 'Setting process ' + process_name + ' unavailable')
+				cron_logger.info(LOG_INDENT + 'Setting process ' + process_name + ' unavailable and could server start')
 				process_availability = _Utilities.set_process_unavailable(process_name,taxpayers=taxpayers,logger=cron_logger,debug_execution=debug_execution,threads=threads)
 				cron_logger.info(LOG_INDENT + process_name + ' availability: ' + str(process_availability))
 			# Multi-threading execution:
