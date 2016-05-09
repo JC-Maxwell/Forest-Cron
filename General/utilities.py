@@ -942,7 +942,7 @@ def check_process_server_availability(process_name,server_index,logger=None,db_P
 		could_server_start = could_server_start_by_index[server_index_str]
 		server_availability = servers_availability[server_index_str]
 		logger.info(2*LOG_INDENT + 'Server availability: ' + str(server_availability) + ' -- Could start: ' + str(could_server_start) + ' = ' + str(servers_availability and could_server_start))
-		if servers_availability and could_server_start:
+		if server_availability and could_server_start:
 			available = True
 		else:
 			available = False
