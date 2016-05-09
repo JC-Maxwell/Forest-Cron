@@ -81,7 +81,7 @@ def validate(process_name,mode=None,server_index=None,debug_execution=False):
 			process_availability = _Utilities.check_process_availability(process_name)
 			if process_availability is False:
 				cron_logger.info(2*LOG_INDENT + 'Checking server ' + str(server_index) + ' of process ' + process_name + ' availability ... ')
-				server_availability = _Utilities.check_process_server_availability(process_name,server_index)
+				server_availability = _Utilities.check_process_server_availability(process_name,server_index,logger=cron_logger)
 				if server_availability is not True:
 					cron_logger.info(LOG_INDENT + 'Server ' + str(server_index) + ' of process ' + process_name + ' is not available')
 					return False
