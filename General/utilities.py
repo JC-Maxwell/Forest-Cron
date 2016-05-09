@@ -23,6 +23,7 @@ from datetime import date as Date
 import signal
 import datetime
 from dateutil.relativedelta import *
+from bson.objectid import ObjectId
 
 # Pauli SDK dependency:
 from pauli_sdk.Modules import constants as _Pauli_Constants
@@ -922,8 +923,18 @@ def check_process_availability(process_name,logger=None,db_Process=None,debug_ex
 			available = True
 		else:
 			available = False
-		process['last_requested'] = Datetime.now()
-		db_Process.save(process)
+		# process['last_requested'] = Datetime.now()
+		process_filter = {
+			'_id' : process['_id']
+		}#End of process_filter
+		updating_data = {
+			'$set' : {
+				'last_requested' : Datetime.now()
+			}#End of $set
+		}#End of updating_data
+		upd = db_Process.update(process_filter,updating_data)
+		if logger is not None:
+			logger.info(upd)
 		return available
 	except Exception as e:
 		# sl1_logger.critical(e.message)

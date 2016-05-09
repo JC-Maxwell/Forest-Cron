@@ -71,14 +71,14 @@ def validate(process_name,mode=None,server_index=None,debug_execution=False):
 			return validated
 		if mode == _Constants.BALANCER_MODE:
 			cron_logger.info(2*LOG_INDENT + 'Balancer mode, checking processs ' + process_name + ' availability ... ')
-			process_availability = _Utilities.check_process_availability(process_name)
+			process_availability = _Utilities.check_process_availability(process_name,logger=cron_logger)
 			if process_availability is not True:
 				cron_logger.info(LOG_INDENT + 'Process ' + process_name + ' is not available')
 				return False
 			return True
 		elif mode == _Constants.SERVER_MODE:
 			cron_logger.info(2*LOG_INDENT + 'Server mode, checking processs ' + process_name + ' availability ... ')
-			process_availability = _Utilities.check_process_availability(process_name)
+			process_availability = _Utilities.check_process_availability(process_name,logger=cron_logger)
 			if process_availability is False:
 				cron_logger.info(2*LOG_INDENT + 'Checking server ' + str(server_index) + ' of process ' + process_name + ' availability ... ')
 				server_availability = _Utilities.check_process_server_availability(process_name,server_index,logger=cron_logger)
@@ -199,7 +199,7 @@ def execute(process):
 		debug_execution = process['debug']
 		if forcing_execution is False:
 			cron_logger.info(LOG_INDENT + 'Validating CRON Process')
-			process_availability = _Utilities.check_process_availability('cron',debug_execution=debug_execution)
+			process_availability = _Utilities.check_process_availability('cron',debug_execution=debug_execution,logger=cron_logger)
 			if process_availability is not True:
 				cron_logger.info(LOG_INDENT + 'CRON is suspended')
 				suspended_at = Datetime.now()
