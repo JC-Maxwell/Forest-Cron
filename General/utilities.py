@@ -933,8 +933,8 @@ def check_process_availability(process_name,logger=None,db_Process=None,debug_ex
 			}#End of $set
 		}#End of updating_data
 		upd = db_Process.update(process_filter,updating_data)
-		if logger is not None:
-			logger.info(upd)
+		# if logger is not None:
+		# 	logger.info(upd)
 		return available
 	except Exception as e:
 		# sl1_logger.critical(e.message)
