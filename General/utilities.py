@@ -827,7 +827,7 @@ def set_process_unavailable(process_name,taxpayers=[],logger=None,db_Process=Non
 		if debug_execution is not True:# These attributes are updated just if it is not a debug execution
 			process['last_triggered'] = Datetime.now()
 			process['available'] = False
-			process['could_server_start'] = DEFAULT_SERVERS
+			process['could_server_start'] = _Constants.DEFAULT_SERVERS
 			if threads is not None:
 				process['servers'] = threads
 		process['total_taxpayers'] = len(taxpayers)
