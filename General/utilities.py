@@ -827,6 +827,7 @@ def set_process_unavailable(process_name,taxpayers=[],logger=None,db_Process=Non
 		if debug_execution is not True:# These attributes are updated just if it is not a debug execution
 			process['last_triggered'] = Datetime.now()
 			process['available'] = False
+			process['could_server_start'] = DEFAULT_SERVERS
 			if threads is not None:
 				process['servers'] = threads
 		process['total_taxpayers'] = len(taxpayers)
@@ -898,6 +899,7 @@ def set_process_server_unavailable(process_name,server_index,logger=None,db_Proc
 		process = get_db_process(process_name,logger=logger)
 		server_index_str = str(server_index)
 		process['servers_availability'][server_index_str] = False
+		process['could_server_start'][server_index_str] = False
 		db_Process.save(process)
 	except Exception as e:
 		if logger is not None:
@@ -934,8 +936,11 @@ def check_process_server_availability(process_name,server_index,logger=None,db_P
 			db_Process = forest_db['Process']
 		process = get_db_process(process_name,logger=logger)
 		servers_availability = process['servers_availability']
+		could_server_start_by_index = process['could_server_start']
 		server_index_str = str(server_index)
-		if server_index_str in servers_availability and servers_availability[server_index_str] is True:
+		could_server_start = could_server_start_by_index[server_index_str]
+		server_availability = servers_availability[server_index_str]
+		if servers_availability is True and could_server_start is True:
 			available = True
 		else:
 			available = False
